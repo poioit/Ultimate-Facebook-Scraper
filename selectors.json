@@ -22,6 +22,7 @@
   "post_photos": ".//a[contains(@class, '_5dec') or contains(@class, '_4-eo')]",
   "post_photo_small" : ".//img[contains(@class, '_46-i')]",
   "post_photo_small_opt1" : ".//img[contains(@class, 'scaledImageFitWidth') or contains(@class, 'scaledImageFitHeight')]",
+  "post_message" : ".//div[@data-testid='post_message']",
   "comment_section" : ".//*[@class='commentable_item']",
   "comment" : ".//div[@aria-label='Comment']",
   "comment_author" : ".//a[@class='_6qw4']",

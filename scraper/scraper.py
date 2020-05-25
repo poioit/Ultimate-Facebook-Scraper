@@ -5,6 +5,8 @@ import urllib.request
 import yaml
 import utils
 import argparse
+import time
+import locale
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -13,7 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
-
+import storage 
 
 def get_facebook_images_url(img_links):
     urls = []
@@ -573,6 +575,20 @@ def scrap_profile():
 
     return
 
+def get_post_message():
+    messages = []
+    try:
+        data = driver.find_elements_by_xpath(selectors.get("post_message"))
+        
+        for d in data:
+            try:
+                print(d.text)
+                messages.append(d.text+'\n')
+            except Exception:
+                pass
+    except Exception:
+        pass
+    return messages
 
 def get_comments():
     comments = []
@@ -610,8 +626,12 @@ def get_comments():
 
 def get_group_post_as_line(post_id, photos_dir):
     try:
+        material = {}
         data = driver.find_element_by_xpath(selectors.get("single_post"))
-        time = utils.get_time(data)
+        ctime = utils.get_time(data)
+        locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
+        if storage.get_posts(material, 'helpbuy') >= time.strptime(ctime, '%Y年%m月%d日 %A%p%I:%M'):
+            return
         title = utils.get_title(data, selectors).text
         # link, status, title, type = get_status_and_title(title,data)
         link = utils.get_div_links(data, "a", selectors)
@@ -620,10 +640,17 @@ def get_group_post_as_line(post_id, photos_dir):
         post_type = ""
         status = '"' + utils.get_status(data, selectors).replace("\r\n", " ") + '"'
         photos = utils.get_post_photos_links(data, selectors, photos_small_size)
+        post_message = get_post_message()
         comments = get_comments()
         photos = image_downloader(photos, photos_dir)
+        material['time'] = ctime
+        material['title'] = title
+        material['link'] = link
+        material['message'] = post_message
+        material['comments'] = comments
+        storage.insert_posts(material) 
         line = (
-            str(time)
+            str(ctime)
             + "||"
             + str(post_type)
             + "||"
@@ -637,12 +664,16 @@ def get_group_post_as_line(post_id, photos_dir):
             + "||"
             + str(photos)
             + "||"
+            + "\n# " + str(post_message)
+            + "||"
             + str(comments)
+            + "\n"
+            + "-----------------------------------------------"
             + "\n"
         )
         return line
     except Exception:
-        return ""
+        print('unexpected error:', sys.exc_info()[0])
 
 
 def create_folders():
@@ -675,6 +706,7 @@ def get_item_id(url):
     ret = ""
     try:
         link = create_original_link(url)
+        print(link)
         ret = link.split("/")[-1]
         if ret.strip() == "":
             ret = link.split("/")[-2]
@@ -794,9 +826,11 @@ def scraper(**kwargs):
     if ("password" not in cfg) or ("email" not in cfg):
         print("Your email or password is missing. Kindly write them in credentials.txt")
         exit(1)
+    for line in open("input.txt"):
+        print(line + "::")
     urls = [
-        facebook_https_prefix + facebook_link_body + get_item_id(line)
-        for line in open("input.txt", newline="\r\n")
+        line
+        for line in open("input.txt")
         if not line.lstrip().startswith("#") and not line.strip() == ""
     ]
 
@@ -893,7 +927,7 @@ if __name__ == "__main__":
     with open("selectors.json") as a, open("params.json") as b:
         selectors = json.load(a)
         params = json.load(b)
-
+    
     firefox_profile_path = selectors.get("firefox_profile_path")
     facebook_https_prefix = selectors.get("facebook_https_prefix")
     facebook_link_body = selectors.get("facebook_link_body")
