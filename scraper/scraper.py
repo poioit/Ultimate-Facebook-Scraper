@@ -766,7 +766,7 @@ def login(email, password):
         options.add_argument("--disable-notifications")
         options.add_argument("--disable-infobars")
         options.add_argument("--mute-audio")
-        # options.add_argument("headless")
+        options.add_argument("--headless")
 
         try:
             driver = webdriver.Chrome(
