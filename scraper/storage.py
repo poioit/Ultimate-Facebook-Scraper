@@ -26,7 +26,7 @@ def insert_posts(posts):
             print("Unexpected error:", sys.exc_info()[0])
 
 
-def get_posts(posts, db = 'luxurai_backend'):
+def get_posts(db = 'luxurai_backend'):
     client = MongoClient('mongodb://localhost:27017/')
     with client:
         try:

@@ -137,8 +137,10 @@ def extract_and_write_posts(elements, filename):
                 )
 
                 try:
-                    f.writelines(line)
+                    print(line)
+                    f.writelines(line.encode('utf-8'))
                 except Exception:
+                    print(sys.exc_info()[0])
                     print("Posts: Could not map encoded characters")
             except Exception:
                 pass
@@ -211,6 +213,9 @@ def extract_and_write_group_posts(elements, filename):
                 pass
         total = len(ids)
         i = 0
+        locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
+        latest_time = storage.get_posts('luxurai_backend')
+        print(latest_time)
         for post_id in ids:
             i += 1
             try:
@@ -225,15 +230,16 @@ def extract_and_write_group_posts(elements, filename):
     return
 
 
-def add_group_post_to_file(f, filename, post_id, number=1, total=1, reload=False):
+def add_group_post_to_file(f, filename, post_id, number=1, total=1, reload=False, latest_time=None):
     print("Scraping Post(" + post_id + "). " + str(number) + " of " + str(total))
     photos_dir = os.path.dirname(filename)
     if reload:
         driver.get(utils.create_post_link(post_id, selectors))
-    line = get_group_post_as_line(post_id, photos_dir)
+    line = get_group_post_as_line(post_id, photos_dir, latest_time)
     try:
         f.writelines(line)
     except Exception:
+        print(sys.exc_info()[0])
         print("Posts: Could not map encoded characters")
 
 
@@ -627,15 +633,14 @@ def get_comments():
     return comments
 
 
-def get_group_post_as_line(post_id, photos_dir):
+def get_group_post_as_line(post_id, photos_dir, latest_time=None):
     try:
         material = {}
         data = driver.find_element_by_xpath(selectors.get("single_post"))
         ctime = utils.get_time(data)
-        locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
-        latest_time = storage.get_posts(material, 'luxurai_backend')
-        if latest_time == None and storage.get_posts(material, 'luxurai_backend') >= time.strptime(ctime, '%Y年%m月%d日 %A%p%I:%M'):
-            return
+        
+        if latest_time != None and latest_time >= time.strptime(ctime, '%Y年%m月%d日 %A%p%I:%M'):
+            return ''
         title = utils.get_title(data, selectors).text
         # link, status, title, type = get_status_and_title(title,data)
         link = utils.get_div_links(data, "a", selectors)
