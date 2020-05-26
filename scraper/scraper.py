@@ -219,7 +219,7 @@ def extract_and_write_group_posts(elements, filename):
         for post_id in ids:
             i += 1
             try:
-                add_group_post_to_file(f, filename, post_id, i, total, reload=True)
+                add_group_post_to_file(f, filename, post_id, i, total, latest_time, reload=True)
             except ValueError:
                 pass
         f.close()
@@ -230,7 +230,7 @@ def extract_and_write_group_posts(elements, filename):
     return
 
 
-def add_group_post_to_file(f, filename, post_id, number=1, total=1, reload=False, latest_time=None):
+def add_group_post_to_file(f, filename, post_id, number=1, total=1, latest_time=None, reload=False):
     print("Scraping Post(" + post_id + "). " + str(number) + " of " + str(total))
     photos_dir = os.path.dirname(filename)
     if reload:
