@@ -8,6 +8,8 @@ import utils
 import argparse
 import time
 import locale
+from pyvirtualdisplay import Display
+from sys import platform as _platform
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -631,7 +633,8 @@ def get_group_post_as_line(post_id, photos_dir):
         data = driver.find_element_by_xpath(selectors.get("single_post"))
         ctime = utils.get_time(data)
         locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
-        if storage.get_posts(material, 'helpbuy') >= time.strptime(ctime, '%Y年%m月%d日 %A%p%I:%M'):
+        latest_time = storage.get_posts(material, 'luxurai_backend')
+        if latest_time == None and storage.get_posts(material, 'luxurai_backend') >= time.strptime(ctime, '%Y年%m月%d日 %A%p%I:%M'):
             return
         title = utils.get_title(data, selectors).text
         # link, status, title, type = get_status_and_title(title,data)
@@ -759,14 +762,16 @@ def login(email, password):
 
     try:
         global driver
-
+        if _platform == 'linux':
+            display = Display(visible=0, size=(800, 800))
+            display.start()
         options = Options()
 
         #  Code to disable notifications pop up of Chrome Browser
         options.add_argument("--disable-notifications")
         options.add_argument("--disable-infobars")
         options.add_argument("--mute-audio")
-        options.add_argument("--headless")
+        #options.add_argument("--headless")
 
         try:
             driver = webdriver.Chrome(
@@ -779,6 +784,7 @@ def login(email, password):
         fb_path = facebook_https_prefix + facebook_link_body
         driver.get(fb_path)
         driver.maximize_window()
+        driver.implicitly_wait(15)
 
         # filling the form
         driver.find_element_by_name("email").send_keys(email)

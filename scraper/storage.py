@@ -19,18 +19,20 @@ def insert_posts(posts):
     client = MongoClient('mongodb://localhost:27017/')
     with client:
         try:
-            db = client['helpbuy']
+            db = client['luxurai_backend']
 
             db['posts'].find_one_and_update({'link': posts['link']}, {"$set": dict(posts)}, upsert=True)
         except:
             print("Unexpected error:", sys.exc_info()[0])
 
 
-def get_posts(posts, db = 'helpbuy'):
+def get_posts(posts, db = 'luxurai_backend'):
     client = MongoClient('mongodb://localhost:27017/')
     with client:
         try:
             record = list(client[db]['posts'].aggregate([{"$sort":{"time":-1}}, {"$limit":1}]))
+            if len(record) == 0:
+                return None
             locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
             return time.strptime(record[0]['time'], '%Y年%m月%d日 %A%p%I:%M')
             #last_time = record[0]
