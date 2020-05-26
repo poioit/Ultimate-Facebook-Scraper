@@ -219,7 +219,7 @@ def extract_and_write_group_posts(elements, filename):
         for post_id in ids:
             i += 1
             try:
-                add_group_post_to_file(f, filename, post_id, i, total, reload=True)
+                add_group_post_to_file(f, filename, post_id, i, total, reload=True, latest_time)
             except ValueError:
                 pass
         f.close()
