@@ -619,13 +619,15 @@ def get_comments():
                 driver.execute_script("arguments[0].click();", link)
             except Exception:
                 pass
-        data = data.find_elements_by_xpath(selectors.get("comment"))
+        data = data.find_elements_by_xpath(selectors.get("comment_tw"))
         for d in data:
             try:
                 author = d.find_element_by_xpath(selectors.get("comment_author")).text
+                profile = d.find_element_by_xpath(selectors.get("comment_author")).get_attribute('href')
+                profile = profile[0:profile.find('?comment_id')]
                 text = d.find_element_by_xpath(selectors.get("comment_text")).text
                 replies = utils.get_replies(d, selectors)
-                comments.append([author, text, replies])
+                comments.append({'author':author, 'text':text, 'profile':profile, 'replies':replies})
             except Exception:
                 pass
     except Exception:
@@ -642,6 +644,8 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         if latest_time != None and latest_time >= time.strptime(ctime, '%Y年%m月%d日 %A%p%I:%M'):
             return ''
         title = utils.get_title(data, selectors).text
+        category = data.find_element_by_xpath("//*[@id='seo_h1_tag']/a").text
+        
         # link, status, title, type = get_status_and_title(title,data)
         link = utils.get_div_links(data, "a", selectors)
         if link != "":
@@ -651,13 +655,17 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         photos = utils.get_post_photos_links(data, selectors, photos_small_size)
         post_message = get_post_message()
         comments = get_comments()
-        photos = image_downloader(photos, photos_dir)
+        download_photos = image_downloader(photos, photos_dir)
         material['time'] = ctime
         material['title'] = title
         material['link'] = link
         material['message'] = post_message
         material['comments'] = comments
-        storage.insert_posts(material) 
+        material['photos'] = photos
+        material['download_photos'] = download_photos
+        material['category'] = category
+        #storage.insert_posts(material)
+        storage.rest_insert_posts(material)
         line = (
             str(ctime)
             + "||"
@@ -841,7 +849,12 @@ def scraper(**kwargs):
     for line in open("input.txt"):
         print(line + "::")
     urls = [
-        line
+        line.split(';')[0]
+        for line in open("input.txt")
+        if not line.lstrip().startswith("#") and not line.strip() == ""
+    ]
+    dbs = [
+        line.split(';')[1].replace('\n','')
         for line in open("input.txt")
         if not line.lstrip().startswith("#") and not line.strip() == ""
     ]
@@ -850,6 +863,7 @@ def scraper(**kwargs):
         print("\nStarting Scraping...")
         login(cfg["email"], cfg["password"])
         for url in urls:
+            storage.set_collection(dbs[0])
             driver.get(url)
             link_type = utils.identify_url(driver.current_url)
             if link_type == 0:

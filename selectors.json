@@ -25,10 +25,14 @@
   "post_message" : ".//div[@data-testid='post_message']",
   "comment_section" : ".//*[@class='commentable_item']",
   "comment" : ".//div[@aria-label='Comment']",
+  "comment_tw" : ".//div[@aria-label='留言']",
   "comment_author" : ".//a[@class='_6qw4']",
   "comment_text" : ".//span[contains(@class,'_3l3x')]",
+  "comment_author_profile" : ".//a[@class='_6qw4']./@href",
   "more_comment_replies": ".//a[contains(@class,'_4sxc _42ft')]",
   "comment_see_more_link" : ".//a[contains(@class,'_5v47 fss')]",
-  "comment_reply" : "..//..//div[@aria-label='Comment reply']"
+  "comment_reply" : "..//..//div[@aria-label='Comment reply']",
+  "comment_reply_tw" : "..//..//div[@aria-label='留言回覆']",
+  "group_category" : "//*[@id='seo_h1_tag']/a"
 
 }

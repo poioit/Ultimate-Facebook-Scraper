@@ -169,6 +169,14 @@ def get_title(x, selectors):
     finally:
         return title
 
+def get_group_category(x, selectors):
+    category = ""
+    try:
+        category = x.find_element_by_xpath(selectors.get("group_category"))
+    except Exception:
+        pass
+    finally:
+        return category
 
 def get_time(x):
     time = ""
@@ -236,12 +244,14 @@ def safe_find_elements_by_xpath(driver, xpath):
 
 def get_replies(comment_element, selectors):
     replies = []
-    data = comment_element.find_elements_by_xpath(selectors.get("comment_reply"))
+    data = comment_element.find_elements_by_xpath(selectors.get("comment_reply_tw"))
     for d in data:
         try:
             author = d.find_element_by_xpath(selectors.get("comment_author")).text
+            profile = d.find_element_by_xpath(selectors.get("comment_author")).get_attribute('href')
+            profile = profile[0,profile.find('?comment_id')]
             text = d.find_element_by_xpath(selectors.get("comment_text")).text
-            replies.append([author, text])
+            replies.append({'author':author, 'text':text, 'profile': profile})
         except Exception:
             pass
     return replies
