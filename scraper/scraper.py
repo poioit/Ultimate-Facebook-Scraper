@@ -115,10 +115,10 @@ def extract_and_write_posts(elements, filename):
                 # id
                 post_id = utils.get_post_id(x)
                 ids.append(post_id)
-
+                x.find_element_by_xpath(selectors.get("more_comment_replies"))
                 # time
                 time = utils.get_time(x)
-
+                print(x.text)
                 link, status, title, post_type = get_status_and_title(link, x)
 
                 line = (
@@ -151,6 +151,116 @@ def extract_and_write_posts(elements, filename):
         print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
     return
 
+def extract_and_write_posts_onfan(elements, filename):
+    try:
+        f = open(filename, "w", newline="\r\n", encoding="utf-8")
+        f.writelines(
+            " TIME || TYPE  || TITLE || STATUS  ||   LINKS(Shared Posts/Shared Links etc) || POST_ID "
+            + "\n"
+            + "\n"
+        )
+        ids = []
+        for x in elements:
+            try:
+                link = ""
+                # id
+                post_id = utils.get_post_id(x)
+                print(post_id)
+                ids.append(post_id)
+                
+                # locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
+                # latest_time = storage.rest_get_posts('luxurai_backend')
+                # time
+                time = utils.get_time(x)
+                print(x.text)
+                #link, status, title, post_type = get_fan_status_and_title(link, x)
+
+                line = (
+                    str(time)
+                    + " || "
+                    + str(post_type)
+                    + " || "
+                    + str(title)
+                    + " || "
+                    + str(status)
+                    + " || "
+                    + str(link)
+                    + " || "
+                    + str(post_id)
+                    + "\n"
+                )
+
+                try:
+                    print(line)
+                    f.writelines(line.encode('utf-8'))
+                except Exception:
+                    print(sys.exc_info()[0])
+                    print("Posts: Could not map encoded characters")
+            except Exception:
+                pass
+        f.close()
+    except ValueError:
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+    except Exception:
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+    return
+
+def get_fan_status_and_title(link, x):
+    # title
+    title = utils.get_title(x, selectors)
+    if title.text.find("shared a memory") != -1:
+        x = x.find_element_by_xpath(selectors.get("title_element"))
+        title = utils.get_title(x, selectors)
+    status = utils.get_status(x, selectors)
+    try:
+        #time.sleep(20)
+        result = driver.find_element_by_xpath(selectors.get("title_text_fan")).text
+        print(redsult)
+        if title.text == result or result.index(title.text):
+            if status == "":
+                temp = utils.get_div_links(x, "img", selectors)
+                if temp == "":  # no image tag which means . it is not a life event
+                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+                    post_type = "status update without text"
+                else:
+                    post_type = "life event"
+                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+                    status = utils.get_div_links(x, "a", selectors).text
+            else:
+                post_type = "status update"
+                if utils.get_div_links(x, "a", selectors) != "":
+                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+
+        elif title.text.find(" shared ") != -1:
+            x1, link = utils.get_title_links(title)
+            post_type = "shared " + x1
+        elif title.text.find(" at ") != -1 or title.text.find(" in ") != -1:
+            if title.text.find(" at ") != -1:
+                x1, link = utils.get_title_links(title)
+                post_type = "check in"
+            elif title.text.find(" in ") != 1:
+                status = utils.get_div_links(x, "a", selectors).text
+        elif title.text.find(" added ") != -1 and title.text.find("photo") != -1:
+            post_type = "added photo"
+            link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+
+        elif title.text.find(" added ") != -1 and title.text.find("video") != -1:
+            post_type = "added video"
+            link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+
+        else:
+            post_type = "others"
+        if not isinstance(title, str):
+            title = title.text
+        status = status.replace("\n", " ")
+        title = title.replace("\n", " ")
+    except NoSuchElementException:  #spelling error making this code not work as expected
+        pass
+    except Exception:
+        print("Exception (get_fan_status_and_title)", "Status =", sys.exc_info()[0])
+    return link, status, title, post_type
+
+
 
 def get_status_and_title(link, x):
     # title
@@ -159,44 +269,47 @@ def get_status_and_title(link, x):
         x = x.find_element_by_xpath(selectors.get("title_element"))
         title = utils.get_title(x, selectors)
     status = utils.get_status(x, selectors)
-    if title.text == driver.find_element_by_id(selectors.get("title_text")).text:
-        if status == "":
-            temp = utils.get_div_links(x, "img", selectors)
-            if temp == "":  # no image tag which means . it is not a life event
-                link = utils.get_div_links(x, "a", selectors).get_attribute("href")
-                post_type = "status update without text"
+    try:
+        if title.text == driver.find_element_by_id(selectors.get("title_text")).text:
+            if status == "":
+                temp = utils.get_div_links(x, "img", selectors)
+                if temp == "":  # no image tag which means . it is not a life event
+                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+                    post_type = "status update without text"
+                else:
+                    post_type = "life event"
+                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+                    status = utils.get_div_links(x, "a", selectors).text
             else:
-                post_type = "life event"
-                link = utils.get_div_links(x, "a", selectors).get_attribute("href")
-                status = utils.get_div_links(x, "a", selectors).text
-        else:
-            post_type = "status update"
-            if utils.get_div_links(x, "a", selectors) != "":
-                link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+                post_type = "status update"
+                if utils.get_div_links(x, "a", selectors) != "":
+                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
 
-    elif title.text.find(" shared ") != -1:
-        x1, link = utils.get_title_links(title)
-        post_type = "shared " + x1
-    elif title.text.find(" at ") != -1 or title.text.find(" in ") != -1:
-        if title.text.find(" at ") != -1:
+        elif title.text.find(" shared ") != -1:
             x1, link = utils.get_title_links(title)
-            post_type = "check in"
-        elif title.text.find(" in ") != 1:
-            status = utils.get_div_links(x, "a", selectors).text
-    elif title.text.find(" added ") != -1 and title.text.find("photo") != -1:
-        post_type = "added photo"
-        link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+            post_type = "shared " + x1
+        elif title.text.find(" at ") != -1 or title.text.find(" in ") != -1:
+            if title.text.find(" at ") != -1:
+                x1, link = utils.get_title_links(title)
+                post_type = "check in"
+            elif title.text.find(" in ") != 1:
+                status = utils.get_div_links(x, "a", selectors).text
+        elif title.text.find(" added ") != -1 and title.text.find("photo") != -1:
+            post_type = "added photo"
+            link = utils.get_div_links(x, "a", selectors).get_attribute("href")
 
-    elif title.text.find(" added ") != -1 and title.text.find("video") != -1:
-        post_type = "added video"
-        link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+        elif title.text.find(" added ") != -1 and title.text.find("video") != -1:
+            post_type = "added video"
+            link = utils.get_div_links(x, "a", selectors).get_attribute("href")
 
-    else:
-        post_type = "others"
-    if not isinstance(title, str):
-        title = title.text
-    status = status.replace("\n", " ")
-    title = title.replace("\n", " ")
+        else:
+            post_type = "others"
+        if not isinstance(title, str):
+            title = title.text
+        status = status.replace("\n", " ")
+        title = title.replace("\n", " ")
+    except Exception:
+        print("Exception (get_status_and_title)", "Status =", sys.exc_info()[0])
     return link, status, title, post_type
 
 
@@ -207,19 +320,48 @@ def extract_and_write_group_posts(elements, filename):
         for x in elements:
             try:
                 # id
-                post_id = utils.get_group_post_id(x)
+                post_id = utils.get_fan_post_id(x)
                 ids.append(post_id)
             except Exception:
                 pass
         total = len(ids)
         i = 0
         locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
-        latest_time = storage.get_posts('luxurai_backend')
+        latest_time = storage.rest_get_posts('luxurai_backend')
         print(latest_time)
         for post_id in ids:
             i += 1
             try:
                 add_group_post_to_file(f, filename, post_id, i, total, latest_time, reload=True)
+            except ValueError:
+                pass
+        f.close()
+    except ValueError:
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+    except Exception:
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+    return
+
+def extract_and_write_fan_posts(elements, filename):
+    try:
+        f = create_post_file(filename)
+        ids = []
+        for x in elements:
+            try:
+                # id
+                post_href = utils.get_fan_post_href(x)
+                ids.append(post_href)
+            except Exception:
+                pass
+        total = len(ids)
+        i = 0
+        locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
+        latest_time = storage.rest_get_posts('luxurai_backend')
+        print(latest_time)
+        for post_href in ids:
+            i += 1
+            try:
+                add_group_post_to_file(f, filename, post_href, i, total, latest_time, reload=False)
             except ValueError:
                 pass
         f.close()
@@ -236,6 +378,7 @@ def add_group_post_to_file(f, filename, post_id, number=1, total=1, latest_time=
     if reload:
         driver.get(utils.create_post_link(post_id, selectors))
     line = get_group_post_as_line(post_id, photos_dir, latest_time)
+    print(line)
     try:
         f.writelines(line)
     except Exception:
@@ -274,7 +417,7 @@ def save_to_file(name, elements, status, current_section):
     try:
         f = None  # file pointer
 
-        if status != 4 and status != 5:
+        if status != 4 and status != 5 and status !=6:
             f = open(name, "w", encoding="utf-8", newline="\r\n")
 
         results = []
@@ -423,6 +566,11 @@ def save_to_file(name, elements, status, current_section):
             extract_and_write_group_posts(elements, name)
             return
 
+        # dealing with Fan Posts
+        elif status == 6:
+            extract_and_write_fan_posts(elements, name)
+            return
+
         """Write results to file"""
         if status == 0:
             for i, _ in enumerate(results):
@@ -468,7 +616,7 @@ def scrape_data(url, scan_list, section, elements_path, save_status, file_names)
     """Given some parameters, this function can scrap friends/photos/videos/about/posts(statuses) of a profile"""
     page = []
 
-    if save_status == 4 or save_status == 5:
+    if save_status == 4 or save_status == 5 or save_status == 6:
         page.append(url)
 
     page += [url + s for s in section]
@@ -558,12 +706,13 @@ def scrap_profile():
         os.chdir("../..")
         return
 
-    to_scrap = ["Friends", "Photos", "Videos", "About", "Posts"]
+    #to_scrap = ["Friends", "Photos", "Videos", "About", "Posts"]
+    to_scrap = ["FanPosts"]
     for item in to_scrap:
         print("----------------------------------------")
         print("Scraping {}..".format(item))
 
-        if item == "Posts":
+        if item == "Posts" or item == "FanPosts":
             scan_list = [None]
         elif item == "About":
             scan_list = [None] * 7

@@ -108,6 +108,15 @@ def get_group_post_id(x):
         pass
     return post_id
 
+def get_fan_post_href(x):
+    post_id = -1
+    try:
+        href = x.get_attribute("href")
+
+    except Exception:
+        pass
+    return href
+
 
 def get_photo_link(x, selectors, small_photo):
     link = ""

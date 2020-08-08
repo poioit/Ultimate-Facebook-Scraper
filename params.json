@@ -147,5 +147,16 @@
       "Posts.txt"
     ],
     "save_status": 5
+  },
+  "FanPosts": {
+    "scan_list": [],
+    "section": [],
+    "elements_path": [
+      "//a[@class='see_more_link']"
+    ],
+    "file_names": [
+      "Posts.txt"
+    ],
+    "save_status": 6
   }
 }
