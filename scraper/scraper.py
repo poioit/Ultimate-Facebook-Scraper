@@ -320,7 +320,7 @@ def extract_and_write_group_posts(elements, filename):
         for x in elements:
             try:
                 # id
-                post_id = utils.get_fan_post_id(x)
+                post_id = utils.get_group_post_id(x)
                 ids.append(post_id)
             except Exception:
                 pass
