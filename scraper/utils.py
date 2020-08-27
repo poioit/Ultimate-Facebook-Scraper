@@ -49,6 +49,7 @@ def scroll(total_scrolls, driver, selectors, scroll_time):
 
     while True:
         try:
+            print(current_scrolls)
             if current_scrolls == total_scrolls:
                 return
 

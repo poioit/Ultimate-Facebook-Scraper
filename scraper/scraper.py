@@ -19,6 +19,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 import storage 
+import requests
+
+TELEGRAM_API_ROOT = 'https://api.telegram.org/'
+apiURL = ''
 
 def get_facebook_images_url(img_links):
     urls = []
@@ -989,12 +993,21 @@ def login(email, password):
 
 
 def scraper(**kwargs):
+
     with open("credentials.yaml", "r") as ymlfile:
         cfg = yaml.safe_load(stream=ymlfile)
 
     if ("password" not in cfg) or ("email" not in cfg):
         print("Your email or password is missing. Kindly write them in credentials.txt")
         exit(1)
+    if ("TELEGRAM_TOKEN" not in cfg) or ("CHAT_ID" not in cfg):
+        print("Your TELEGRAM_TOKEN or CHAT_ID is missing. Kindly write them in credentials.yaml")
+        exit(1)
+        
+    apiURL = TELEGRAM_API_ROOT + 'bot' + str(cfg['TELEGRAM_TOKEN']) + '/sendMessage?chat_id=' + str(cfg['CHAT_ID']) + '&text=fb_scraper action: \n'
+    req = apiURL + 'start...'
+    requests.get(req)
+
     for line in open("input.txt"):
         print(line + "::")
     urls = [
@@ -1034,6 +1047,11 @@ def scraper(**kwargs):
         driver.close()
     else:
         print("Input file is empty.")
+
+    req = apiURL + 'end.'
+    requests.get(req)
+
+    
 
 
 # -------------------------------------------------------------
