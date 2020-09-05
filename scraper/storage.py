@@ -4,6 +4,7 @@ import time
 import locale
 from simple_rest_client.api import API
 from simple_rest_client.resource import Resource
+from bson.objectid import ObjectId
 
 class HelpbuysResource(Resource):
     actions = {
@@ -42,13 +43,20 @@ def set_collection(dst):
     global collection
     collection = dst
     
-def insert_posts(posts):
-    client = MongoClient('mongodb://localhost:27017/luxurai_backend?authSource=admin', username='db_agent', password='Ie!5Og@rHPAe')
+def update_post(posts):
+    
+    # client = MongoClient('mongodb://localhost:27017/luxurai_backend?authSource=admin', username='db_agent', password='Ie!5Og@rHPAe')
+    client = MongoClient('localhost',
+    username='eshopuser',
+    password='password',
+    authSource='admin',
+    authMechanism='SCRAM-SHA-256')
+    print('in update post')
+    print(client)
     with client:
         try:
-            db = client['luxurai_backend']
-
-            db[collection].find_one_and_update({'link': posts['link']}, {"$set": dict(posts)}, upsert=True)
+            db = client['luxurai_backend'] 
+            db['helpbuys'].update({'post_id': posts['post_id']}, posts, upsert=True)
         except:
             print("Unexpected error:", sys.exc_info()[0])
 

@@ -144,7 +144,7 @@ def extract_and_write_posts(elements, filename):
                     print(line)
                     f.writelines(line.encode('utf-8'))
                 except Exception:
-                    print(sys.exc_info()[0])
+                    print(sys.exc_info())
                     print("Posts: Could not map encoded characters")
             except Exception:
                 pass
@@ -792,6 +792,9 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
     try:
         material = {}
         data = driver.find_element_by_xpath(selectors.get("single_post"))
+        print('post_id:'+post_id)
+        print(data)
+        print('================================')
         ctime = utils.get_time(data)
         
         if latest_time != None and latest_time >= time.strptime(ctime, '%Y年%m月%d日 %A%p%I:%M'):
@@ -809,6 +812,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         post_message = get_post_message()
         comments = get_comments()
         download_photos = image_downloader(photos, photos_dir)
+        material['post_id'] = post_id
         material['time'] = ctime
         material['title'] = title
         material['link'] = link
@@ -818,7 +822,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         material['download_photos'] = download_photos
         material['category'] = category
         #storage.insert_posts(material)
-        storage.rest_insert_posts(material)
+        storage.update_post(material)
         line = (
             str(ctime)
             + "||"
@@ -843,7 +847,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         )
         return line
     except Exception:
-        print('unexpected error:', sys.exc_info()[0])
+        print('unexpected error:', sys.exc_info())
 
 
 def create_folders():
