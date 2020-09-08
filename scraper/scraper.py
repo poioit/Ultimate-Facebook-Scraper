@@ -331,7 +331,7 @@ def extract_and_write_group_posts(elements, filename):
         total = len(ids)
         i = 0
         locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
-        latest_time = storage.rest_get_posts('luxurai_backend')
+        latest_time = storage.get_posts('luxurai_backend')
         print(latest_time)
         for post_id in ids:
             i += 1
@@ -655,7 +655,7 @@ def scrape_data(url, scan_list, section, elements_path, save_status, file_names)
                 str(i),
                 "Status =",
                 str(save_status),
-                sys.exc_info()[0],
+                sys.exc_info(),
             )
 
 

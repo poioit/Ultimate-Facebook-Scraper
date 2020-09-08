@@ -2,9 +2,11 @@ from pymongo import MongoClient
 import sys
 import time
 import locale
+import datetime
 from simple_rest_client.api import API
 from simple_rest_client.resource import Resource
 from bson.objectid import ObjectId
+
 
 class HelpbuysResource(Resource):
     actions = {
@@ -47,18 +49,34 @@ def update_post(posts):
     
     # client = MongoClient('mongodb://localhost:27017/luxurai_backend?authSource=admin', username='db_agent', password='Ie!5Og@rHPAe')
     client = MongoClient('localhost',
-    username='eshopuser',
-    password='password',
+    username='db_agent',
+    password='Ie!5Og@rHPAe',
     authSource='admin',
     authMechanism='SCRAM-SHA-256')
     print('in update post')
     print(client)
     with client:
+        timenow = datetime.datetime.now()
         try:
             db = client['luxurai_backend'] 
-            db['helpbuys'].update({'post_id': posts['post_id']}, posts, upsert=True)
+            if db['helpbuys'].find({'post_id': posts['post_id']}).count()==0:
+                print('insert')
+                posts['createdAt']=timenow
+                posts['updatedAt']=timenow
+                db['helpbuys'].insert(posts)
+            else:
+                print('update')
+                db['helpbuys'].update_one(
+                    {'post_id': posts['post_id']},
+                    {'$set':{
+                        'updatedAt': timenow,
+                        'comments': posts.comments
+                    }}
+                )
         except:
-            print("Unexpected error:", sys.exc_info()[0])
+            print("Unexpected error:", sys.exc_info())
+
+
 
 def rest_get_posts(db = 'luxurai_backend'):
     try:
@@ -74,7 +92,11 @@ def rest_get_posts(db = 'luxurai_backend'):
 
 def get_posts(db = 'luxurai_backend'):
     try:
-        client = MongoClient('mongodb://localhost:27017/luxurai_backend?authSource=admin', username='db_agent', password='Ie!5Og@rHPAe')
+        client = MongoClient('localhost',
+        username='db_agent',
+        password='Ie!5Og@rHPAe',
+        authSource='admin',
+        authMechanism='SCRAM-SHA-256')      
         with client:
         
             record = list(client[db][collection].aggregate([{"$sort":{"time":-1}}, {"$limit":1}]))
