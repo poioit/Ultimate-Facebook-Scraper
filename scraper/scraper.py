@@ -96,7 +96,7 @@ def image_downloader(img_links, folder_name):
 
         os.chdir(parent)
     except Exception:
-        print("Exception (image_downloader):", sys.exc_info()[0])
+        print("Exception (image_downloader):", sys.exc_info())
     return img_names
 
 
@@ -150,9 +150,9 @@ def extract_and_write_posts(elements, filename):
                 pass
         f.close()
     except ValueError:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     except Exception:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     return
 
 def extract_and_write_posts_onfan(elements, filename):
@@ -198,15 +198,15 @@ def extract_and_write_posts_onfan(elements, filename):
                     print(line)
                     f.writelines(line.encode('utf-8'))
                 except Exception:
-                    print(sys.exc_info()[0])
+                    print(sys.exc_info())
                     print("Posts: Could not map encoded characters")
             except Exception:
                 pass
         f.close()
     except ValueError:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     except Exception:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     return
 
 def get_fan_status_and_title(link, x):
@@ -261,7 +261,7 @@ def get_fan_status_and_title(link, x):
     except NoSuchElementException:  #spelling error making this code not work as expected
         pass
     except Exception:
-        print("Exception (get_fan_status_and_title)", "Status =", sys.exc_info()[0])
+        print("Exception (get_fan_status_and_title)", "Status =", sys.exc_info())
     return link, status, title, post_type
 
 
@@ -313,7 +313,7 @@ def get_status_and_title(link, x):
         status = status.replace("\n", " ")
         title = title.replace("\n", " ")
     except Exception:
-        print("Exception (get_status_and_title)", "Status =", sys.exc_info()[0])
+        print("Exception (get_status_and_title)", "Status =", sys.exc_info())
     return link, status, title, post_type
 
 
@@ -331,19 +331,22 @@ def extract_and_write_group_posts(elements, filename):
         total = len(ids)
         i = 0
         locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
-        latest_time = storage.get_posts('luxurai_backend')
-        print(latest_time)
+
+        # latest is not precise, stop use it
+        # latest_time = storage.get_posts('luxurai_backend')
+        # print(latest_time)
+
         for post_id in ids:
             i += 1
             try:
-                add_group_post_to_file(f, filename, post_id, i, total, latest_time, reload=True)
+                add_group_post_to_file(f, filename, post_id, i, total, None, reload=True)
             except ValueError:
                 pass
         f.close()
     except ValueError:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     except Exception:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     return
 
 def extract_and_write_fan_posts(elements, filename):
@@ -370,9 +373,9 @@ def extract_and_write_fan_posts(elements, filename):
                 pass
         f.close()
     except ValueError:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     except Exception:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info()[0])
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     return
 
 
@@ -386,7 +389,7 @@ def add_group_post_to_file(f, filename, post_id, number=1, total=1, latest_time=
     try:
         f.writelines(line)
     except Exception:
-        print(sys.exc_info()[0])
+        print(sys.exc_info())
         print("Posts: Could not map encoded characters")
 
 
@@ -499,7 +502,7 @@ def save_to_file(name, elements, status, current_section):
                     str(status),
                     "Status =",
                     current_section,
-                    sys.exc_info()[0],
+                    sys.exc_info(),
                 )
 
         # dealing with Photos
@@ -537,7 +540,7 @@ def save_to_file(name, elements, status, current_section):
                     str(status),
                     "Status =",
                     current_section,
-                    sys.exc_info()[0],
+                    sys.exc_info(),
                 )
 
         # dealing with Videos
@@ -607,7 +610,7 @@ def save_to_file(name, elements, status, current_section):
         f.close()
 
     except Exception:
-        print("Exception (save_to_file)", "Status =", str(status), sys.exc_info()[0])
+        print("Exception (save_to_file)", "Status =", str(status), sys.exc_info())
 
     return
 
@@ -948,7 +951,7 @@ def login(email, password):
                 executable_path=ChromeDriverManager().install(), options=options
             )
         except Exception:
-            print("Error loading chrome webdriver " + sys.exc_info()[0])
+            print("Error loading chrome webdriver " + sys.exc_info())
             exit(1)
 
         fb_path = facebook_https_prefix + facebook_link_body
@@ -988,7 +991,7 @@ def login(email, password):
 
     except Exception:
         print("There's some error in log in.")
-        print(sys.exc_info()[0])
+        print(sys.exc_info())
         exit(1)
 
 

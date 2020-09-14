@@ -38,7 +38,7 @@ def rest_insert_posts(posts):
         if response.status_code == 201:
             print( 'insert ok')
     except:
-        print("rest_insert_posts Unexpected error:", sys.exc_info()[0])
+        print("rest_insert_posts Unexpected error:", sys.exc_info())
 
 
 def set_collection(dst):
@@ -48,7 +48,7 @@ def set_collection(dst):
 def update_post(posts):
     
     # client = MongoClient('mongodb://localhost:27017/luxurai_backend?authSource=admin', username='db_agent', password='Ie!5Og@rHPAe')
-    client = MongoClient('localhost',
+    client = MongoClient('52.194.223.156',
     username='db_agent',
     password='Ie!5Og@rHPAe',
     authSource='admin',
@@ -88,11 +88,11 @@ def rest_get_posts(db = 'luxurai_backend'):
         locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
         return time.strptime(record[0]['time'], '%Y年%m月%d日 %A%p%I:%M')
     except:
-        print('unexpected error:', sys.exc_info()[0])
+        print('unexpected error:', sys.exc_info())
 
 def get_posts(db = 'luxurai_backend'):
     try:
-        client = MongoClient('localhost',
+        client = MongoClient('52.194.223.156',
         username='db_agent',
         password='Ie!5Og@rHPAe',
         authSource='admin',
@@ -103,9 +103,9 @@ def get_posts(db = 'luxurai_backend'):
             if len(record) == 0:
                 return None
             locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
-            return time.strptime(record[0]['time'], '%Y年%m月%d日 %A%p%I:%M')
+            return time.strptime(record[0]['updatedAt'], '%Y年%m月%d日 %A%p%I:%M')
             #last_time = record[0]
             #for doc in record:
             #    print(doc)
     except:
-        print('unexpected error:', sys.exc_info()[0])
+        print('unexpected error:', sys.exc_info())
