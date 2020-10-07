@@ -8,8 +8,11 @@ import utils
 import argparse
 import time
 import locale
+import inspect
 from pyvirtualdisplay import Display
 from sys import platform as _platform
+from time import sleep
+import re
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -18,6 +21,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
+from selenium.common import exceptions
+#import pyautogui
 import storage 
 import requests
 
@@ -219,7 +226,7 @@ def get_fan_status_and_title(link, x):
     try:
         #time.sleep(20)
         result = driver.find_element_by_xpath(selectors.get("title_text_fan")).text
-        print(redsult)
+        print(result)
         if title.text == result or result.index(title.text):
             if status == "":
                 temp = utils.get_div_links(x, "img", selectors)
@@ -320,22 +327,67 @@ def get_status_and_title(link, x):
 def extract_and_write_group_posts(elements, filename):
     try:
         f = create_post_file(filename)
-        ids = []
+        ids = set()
+        cnt = 0
+        driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + Keys.HOME)
         for x in elements:
             try:
                 # id
+                print(cnt)
+                cnt = cnt+1
+                
+                try:
+                    driver.execute_script("return arguments[0].scrollIntoView(true);", x)
+                    sleep(0.1)
+                    driver.execute_script("scrollBy(0,-1200);")
+                    sleep(0.1)
+                except Exception:
+                    pass
+                
+                hov = ActionChains(driver)
+                hov.move_to_element(x).perform()
+                sleep(0.05)
+                
+                #pyautogui.typewrite(['down','down','down','down','enter'])
+                #hov.move_to_element(x).click().perform()
+                #driver.back()
+                #hov.contextClick(x)
+                #hov.perform()
+                #post_id = x.get_attribute("role")
+                els = driver.find_elements_by_xpath(selectors.get("group_id"))
+                for y in els:
+                    try:
+                        post_id = y.get_attribute("href")
+                        p = re.compile('\w+\/(groups\/\d+\/permalink\/\d+\/).')
+                        
+                        post_id = p.findall(post_id)
+                        if len(post_id):
+                            ids.add(post_id[0])
+                    except Exception as e:
+                        print("clicke error" . str(e))
+                        pass
+                #post_href = x.get_attribute("href")
+                #print(post_href)
+                #attrs = driver.execute_script('var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;', x)
+                #print(attrs)
+            except Exception as e:
+                print(e)
+                pass
+        '''
+        eles = driver.find_elements_by_xpath(selectors.get("group_id"))
+        for x in eles:
+            try:
                 post_id = utils.get_group_post_id(x)
                 ids.append(post_id)
             except Exception:
                 pass
+        '''
         total = len(ids)
         i = 0
-        locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
-
+        # locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
         # latest is not precise, stop use it
         # latest_time = storage.get_posts('luxurai_backend')
         # print(latest_time)
-
         for post_id in ids:
             i += 1
             try:
@@ -747,8 +799,9 @@ def get_post_message():
         
         for d in data:
             try:
-                print(d.text)
-                messages.append(d.text+'\n')
+                #print(d.text)
+                if d.text != '':
+                    messages.append(d.text+'\n')
             except Exception:
                 pass
     except Exception:
@@ -757,6 +810,7 @@ def get_post_message():
 
 def get_comments():
     comments = []
+    start = time.time()
     try:
         data = driver.find_element_by_xpath(selectors.get("comment_section"))
         reply_links = driver.find_elements_by_xpath(
@@ -775,19 +829,23 @@ def get_comments():
                 driver.execute_script("arguments[0].click();", link)
             except Exception:
                 pass
-        data = data.find_elements_by_xpath(selectors.get("comment_tw"))
+        replytime = time.time()
+        data = data.find_elements_by_xpath(selectors.get("comment"))
         for d in data:
             try:
                 author = d.find_element_by_xpath(selectors.get("comment_author")).text
-                profile = d.find_element_by_xpath(selectors.get("comment_author")).get_attribute('href')
+                profile = d.find_element_by_xpath(selectors.get("comment_author_href")).get_attribute('href')
                 profile = profile[0:profile.find('?comment_id')]
                 text = d.find_element_by_xpath(selectors.get("comment_text")).text
-                replies = utils.get_replies(d, selectors)
+                #replies = utils.get_replies(d, selectors)
                 comments.append({'author':author, 'text':text, 'profile':profile, 'replies':replies})
             except Exception:
                 pass
     except Exception:
         pass
+    end = time.time()
+    print("end - start:" + str(end-start))
+    print("end - reply:" + str(end-replytime))
     return comments
 
 
@@ -796,23 +854,104 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         material = {}
         data = driver.find_element_by_xpath(selectors.get("single_post"))
         print('post_id:'+post_id)
-        print(data)
+        #print(data)
         print('================================')
-        ctime = utils.get_time(data)
+        ctimes = driver.find_elements_by_xpath(selectors.get("time"))
+        cnt = 0
+        ctime = ''
+        try:
+            for celement in ctimes:
+                hov = ActionChains(driver)
+                hov.move_to_element(celement).perform()
+                sleep(0.1)
+                ctime = driver.find_element_by_xpath(selectors.get("ctime")).text
+                #ctext = utils.get_time(data, selectors)
+                print(ctime)
+                cnt = cnt + 1
+                if ctime is not '':
+                    break
+        except Exception:
+            print('get ctime error')
+            pass
         
-        if latest_time != None and latest_time >= time.strptime(ctime, '%Y年%m月%d日 %A%p%I:%M'):
-            return ''
-        title = utils.get_title(data, selectors).text
-        category = data.find_element_by_xpath("//*[@id='seo_h1_tag']/a").text
+        #ctime = utils.get_time(data, selectors)
+        
+        #if latest_time != None and latest_time >= time.strptime(ctime, '%Y年%m月%d日 %A%p%I:%M'):
+        #    return ''
+        category = ''
+        title = ''
+        try:
+            category = data.find_element_by_xpath("//*[@class='bi6gxh9e aov4n071']").text
+        except exceptions.StaleElementReferenceException:
+            print('get category StaleElementReferenceException')
+            driver.get(utils.create_post_link(post_id, selectors))
+            return get_group_post_as_line(post_id, photos_dir)
+        except Exception:
+            print('get category error')
+            pass
+        print('get title')
+        try:
+            title = utils.get_title(data, selectors).text
+        except Exception:
+            print('get title error')
+            pass
+        print(category + title)
         
         # link, status, title, type = get_status_and_title(title,data)
-        link = utils.get_div_links(data, "a", selectors)
-        if link != "":
-            link = link.get_attribute("href")
+        #link = utils.get_div_links(data, "a", selectors)
+        #if link != "":
+        #    link = link.get_attribute("href")
+        link = ""
         post_type = ""
-        status = '"' + utils.get_status(data, selectors).replace("\r\n", " ") + '"'
-        photos = utils.get_post_photos_links(data, selectors, photos_small_size)
+        users = []
+        #status = '"' + utils.get_status(data, selectors).replace("\r\n", " ") + '"'
+        try:
+            print('get response')
+            try:
+                status = utils.get_status(driver, data, selectors)
+                count = int(status.text.split('\n')[0])
+                hov = ActionChains(driver)
+                hov.move_to_element(status).click().perform()
+                sleep(0.5)
+                popupdiv = driver.find_element_by_xpath(selectors.get("status_all_list"))
+                mooddiv = driver.find_element_by_xpath(selectors.get("status_mood"))
+                driver.execute_script("arguments[0].scrollIntoView(true);",mooddiv)
+                sleep((count/20+1)*0.5)
+                user_list = popupdiv.find_elements_by_xpath(selectors.get("status_user_list"))
+                #user_list = datas.find_elements_by_xpath(selectors.get("status_user_list"))
+                
+                for user in user_list:
+                    users.append(user.get_attribute('href'))
+            except Exception as e:
+                print(e)
+                pass
+            else:
+                
+                print('response close start')
+                try:
+                    divclose = driver.find_element_by_xpath(selectors.get("status_divclose"))
+                    close = divclose.find_element_by_xpath(selectors.get("status_close"))
+                    hov.move_to_element(close).click().perform()
+                    sleep(0.1)
+                except Exception as e:
+                    print(e)
+                    pass
+                print('reponse close end')
+                #print(status_list.get_attribute('innerHTML'))
+        except Exception:
+            print('get status error:' + sys.exc_info())
+            pass
+        
+        print('get photo')
+        try:
+            photos = utils.get_post_photos_links(data, selectors, photos_small_size)
+        except Exception:
+            print('get photo error:' + sys.exc_info())
+            pass
+        print('get message')
         post_message = get_post_message()
+        #post_message = data.text
+        print('get comments')
         comments = get_comments()
         download_photos = image_downloader(photos, photos_dir)
         material['post_id'] = post_id
@@ -833,7 +972,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
             + "||"
             + str(title)
             + "||"
-            + str(status)
+            + str(users)
             + "||"
             + str(link)
             + "||"
@@ -850,7 +989,13 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         )
         return line
     except Exception:
-        print('unexpected error:', sys.exc_info())
+        frame = inspect.currentframe()
+        # __FILE__
+        fileName  =  frame.f_code.co_filename
+        # __LINE__
+        fileNo = frame.f_lineno
+        print(fileName + fileNo + 'unexpected error:', sys.exc_info())
+        return ''
 
 
 def create_folders():

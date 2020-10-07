@@ -70,12 +70,10 @@ def scroll(total_scrolls, driver, selectors, scroll_time):
 # -----------------------------------------------------------------------------
 
 
-def get_status(x, selectors):
+def get_status(driver, x, selectors):
     status = ""
     try:
-        status = x.find_element_by_xpath(
-            selectors.get("status")
-        ).text  # use _1xnd for Pages
+        status = driver.find_element_by_xpath(selectors.get("status"))  # use _1xnd for Pages
     except Exception:
         try:
             status = x.find_element_by_xpath(selectors.get("status_exc")).text
@@ -98,7 +96,7 @@ def get_group_post_id(x):
     post_id = -1
     try:
         post_id = x.get_attribute("id")
-
+        
         post_id = post_id.split("_")[-1]
         if ";" in post_id:
             post_id = post_id.split(";")
@@ -123,9 +121,7 @@ def get_photo_link(x, selectors, small_photo):
     link = ""
     try:
         if small_photo:
-            link = x.find_element_by_xpath(
-                selectors.get("post_photo_small")
-            ).get_attribute("src")
+            link = x.find_element_by_xpath(selectors.get("post_photo_small")).get_attribute("src")
         else:
             link = x.get_attribute("data-ploi")
     except NoSuchElementException:
@@ -144,10 +140,13 @@ def get_photo_link(x, selectors, small_photo):
 
 def get_post_photos_links(x, selectors, small_photo):
     links = []
-    photos = safe_find_elements_by_xpath(x, selectors.get("post_photos"))
-    if photos is not None:
-        for el in photos:
-            links.append(get_photo_link(el, selectors, small_photo))
+    try:
+        photos = safe_find_elements_by_xpath(x, selectors.get("post_photos"))
+        if photos is not None:
+            for el in photos:
+                links.append(get_photo_link(el, selectors, small_photo))
+    except Exception:
+        pass
     return links
 
 
@@ -188,10 +187,11 @@ def get_group_category(x, selectors):
     finally:
         return category
 
-def get_time(x):
+def get_time(x, selectors):
     time = ""
     try:
-        time = x.find_element_by_tag_name("abbr").get_attribute("title")
+        #time = x.find_element_by_tag_name("abbr").get_attribute("title")
+        time = x.find_element_by_xpath(selectors.get("ctime")).text
         time = (
             str("%02d" % int(time.split(", ")[1].split()[1]),)
             + "-"
@@ -254,14 +254,16 @@ def safe_find_elements_by_xpath(driver, xpath):
 
 def get_replies(comment_element, selectors):
     replies = []
-    data = comment_element.find_elements_by_xpath(selectors.get("comment_reply_tw"))
+    data = comment_element.find_elements_by_xpath(selectors.get("comment_reply"))
     for d in data:
         try:
             author = d.find_element_by_xpath(selectors.get("comment_author")).text
-            profile = d.find_element_by_xpath(selectors.get("comment_author")).get_attribute('href')
+            profile = d.find_element_by_xpath(selectors.get("comment_author_href")).get_attribute('href')
             profile = profile[0,profile.find('?comment_id')]
             text = d.find_element_by_xpath(selectors.get("comment_text")).text
             replies.append({'author':author, 'text':text, 'profile': profile})
+        except NoSuchElementException:
+            pass
         except Exception:
             pass
     return replies

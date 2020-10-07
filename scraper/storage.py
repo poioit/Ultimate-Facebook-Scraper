@@ -70,7 +70,7 @@ def update_post(posts):
                     {'post_id': posts['post_id']},
                     {'$set':{
                         'updatedAt': timenow,
-                        'comments': posts.comments
+                        'comments': posts['comments']
                     }}
                 )
         except:
