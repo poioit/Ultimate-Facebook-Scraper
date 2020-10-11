@@ -358,9 +358,9 @@ def extract_and_write_group_posts(elements, filename):
                 for y in els:
                     try:
                         post_id = y.get_attribute("href")
-                        p = re.compile('\w+\/(groups\/\d+\/permalink\/\d+\/).')
+                        regex = re.compile('\w+\/(groups\/\d+\/permalink\/\d+\/).')
                         
-                        post_id = p.findall(post_id)
+                        post_id = regex.findall(post_id)
                         if len(post_id):
                             ids.add(post_id[0])
                     except Exception as e:
@@ -835,9 +835,11 @@ def get_comments():
             try:
                 author = d.find_element_by_xpath(selectors.get("comment_author")).text
                 profile = d.find_element_by_xpath(selectors.get("comment_author_href")).get_attribute('href')
-                profile = profile[0:profile.find('?comment_id')]
-                text = d.find_element_by_xpath(selectors.get("comment_text")).text
-                #replies = utils.get_replies(d, selectors)
+                #profile = profile[0:profile.find('?comment_id')]
+                regex = re.compile('(\w+\/groups\/\d+\/user\/\d+\/).')
+                profile = regex.findall(profile)[0]
+                text = d.text
+                replies = utils.get_replies(d, selectors)
                 comments.append({'author':author, 'text':text, 'profile':profile, 'replies':replies})
             except Exception:
                 pass

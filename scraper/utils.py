@@ -259,8 +259,9 @@ def get_replies(comment_element, selectors):
         try:
             author = d.find_element_by_xpath(selectors.get("comment_author")).text
             profile = d.find_element_by_xpath(selectors.get("comment_author_href")).get_attribute('href')
-            profile = profile[0,profile.find('?comment_id')]
-            text = d.find_element_by_xpath(selectors.get("comment_text")).text
+            #profile = profile[0,profile.find('?comment_id')]
+            #text = d.find_element_by_xpath(selectors.get("comment_text")).text
+            text = d.text
             replies.append({'author':author, 'text':text, 'profile': profile})
         except NoSuchElementException:
             pass
