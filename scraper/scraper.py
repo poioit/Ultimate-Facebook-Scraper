@@ -630,6 +630,19 @@ def save_to_file(name, elements, status, current_section):
             extract_and_write_fan_posts(elements, name)
             return
 
+        # dealing with Group Members
+        elif status == 7:
+            # get profile links of members
+            for x in elements:
+                print(x.get_attribute("href"))
+            results = [x.get_attribute("href") for x in elements]
+
+            # get names of members
+            people_names = [x.text for x in elements]
+            # save to database
+            
+            
+
         """Write results to file"""
         if status == 0:
             for i, _ in enumerate(results):
@@ -658,6 +671,16 @@ def save_to_file(name, elements, status, current_section):
         elif status == 2:
             for x in results:
                 f.writelines(x + "\n")
+
+        elif status == 7:
+            for i, _ in enumerate(results):
+                # friend's profile link
+                f.writelines(results[i])
+                f.write(",")
+
+                # friend's name
+                f.writelines(people_names[i])
+                f.write(",")
 
         f.close()
 
@@ -965,6 +988,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         material['photos'] = photos
         material['download_photos'] = download_photos
         material['category'] = category
+        material['interactions'] = users
         #storage.insert_posts(material)
         storage.update_post(material)
         line = (
@@ -1047,6 +1071,39 @@ def scrape_group(url):
     print("\nScraping:", group_id)
 
     to_scrap = ["GroupPosts"]  # , "Photos", "Videos", "About"]
+    for item in to_scrap:
+        print("----------------------------------------")
+        print("Scraping {}..".format(item))
+
+        if item == "GroupPosts":
+            scan_list = [None]
+        elif item == "About":
+            scan_list = [None] * 7
+        else:
+            scan_list = params[item]["scan_list"]
+
+        section = params[item]["section"]
+        elements_path = params[item]["elements_path"]
+        file_names = params[item]["file_names"]
+        save_status = params[item]["save_status"]
+
+        scrape_data(url, scan_list, section, elements_path, save_status, file_names)
+
+        print("{} Done!".format(item))
+
+    print("Finished Scraping Group " + str(group_id) + ".")
+    os.chdir("../..")
+
+    return
+
+def scrape_groupmembers(url):
+    if create_folders() is None:
+        return
+    group_id = get_item_id(url)
+    # execute for all profiles given in input.txt file
+    print("\nScraping:", group_id)
+
+    to_scrap = ["GroupMembers"]  # , "Photos", "Videos", "About"]
     for item in to_scrap:
         print("----------------------------------------")
         print("Scraping {}..".format(item))
@@ -1198,6 +1255,8 @@ def scraper(**kwargs):
                 add_group_post_to_file(f, file_name, item_id)
                 f.close()
                 os.chdir("../..")
+            elif link_type == 4:
+                scrape_groupmembers(driver.current_url)
         driver.close()
     else:
         print("Input file is empty.")

@@ -233,10 +233,13 @@ def identify_url(url):
     1 - Profile post
     2 - Group
     3 - Group post
+    4 - Group member
     """
     if "groups" in url:
         if "permalink" in url:
             return 3
+        elif "members" in url:
+            return 4
         else:
             return 2
     elif "posts" in url:
