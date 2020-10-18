@@ -1,5 +1,6 @@
 from unittest import TestCase
 from scraper import utils
+from scraper import scraper
 
 
 class Test(TestCase):
@@ -24,3 +25,5 @@ class Test(TestCase):
             utils.identify_url("https://www.facebook.com/sdfsdfsd/posts/123456784684"),
             1,
         )
+    def test_get_group_post_as_line(self, post_id, photos_dir, latest_time):
+        pass

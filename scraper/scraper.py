@@ -12,6 +12,7 @@ import inspect
 from pyvirtualdisplay import Display
 from sys import platform as _platform
 from time import sleep
+from datetime import datetime
 import re
 
 from selenium import webdriver
@@ -886,6 +887,18 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         ctime = ''
         try:
             for celement in ctimes:
+                simpletime = celement.text
+                
+                regex = re.compile("\d+月\d+日\w+")
+                arr_time = regex.findall(simpletime)
+                if len(arr_time) == 0:
+                    simpletime = datetime.now().strftime('%m月%d日')
+                    
+                print("simple time:" + simpletime)
+                ctime = simpletime
+                break
+                #datetime_object = datetime.strptime(celement.text, '%m/%d/%y %H:%M:%S')
+                '''
                 hov = ActionChains(driver)
                 hov.move_to_element(celement).perform()
                 sleep(0.1)
@@ -895,8 +908,10 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
                 cnt = cnt + 1
                 if ctime is not '':
                     break
+                '''
         except Exception:
             print('get ctime error')
+            ctime = simpletime
             pass
         
         #ctime = utils.get_time(data, selectors)
