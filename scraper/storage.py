@@ -70,7 +70,8 @@ def update_post(posts):
                     {'post_id': posts['post_id']},
                     {'$set':{
                         'updatedAt': timenow,
-                        'comments': posts['comments']
+                        'comments': posts['comments'],
+                        'interactions': posts['interactions']
                     }}
                 )
         except:
@@ -109,3 +110,26 @@ def get_posts(db = 'luxurai_backend'):
             #    print(doc)
     except:
         print('unexpected error:', sys.exc_info())
+
+def get_post(post_id, db = 'luxurai_backend'):
+
+    post = {}
+
+    if post_id == '':
+        return []
+    
+    try:
+        client = MongoClient('52.194.223.156',
+        username='db_agent',
+        password='Ie!5Og@rHPAe',
+        authSource='admin',
+        authMechanism='SCRAM-SHA-256')      
+        with client:
+            db = client['luxurai_backend']
+            post = db['helpbuys'].find_one({'post_id': post_id})            
+        
+    except:
+        print('unexpected error:', sys.exc_info())
+
+    return post
+

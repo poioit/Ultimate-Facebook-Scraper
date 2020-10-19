@@ -876,6 +876,14 @@ def get_comments():
 
 def get_group_post_as_line(post_id, photos_dir, latest_time=None):
     try:
+
+        indbComments = []
+        indbLikes = []
+        post = storage.get_post('groups/554988961178275/permalink/4960929310584196/')
+        if 'post_id' in post.keys():
+            indbComments = post['comments']
+            indbLikes = post['interactions']
+
         material = {}
         data = driver.find_element_by_xpath(selectors.get("single_post"))
         print('post_id:'+post_id)
@@ -896,7 +904,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
                 if ctime is not '':
                     break
         except Exception:
-            print('get ctime error')
+            print('get ctime error:' + sys.exc_info())
             pass
         
         #ctime = utils.get_time(data, selectors)
@@ -946,7 +954,8 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
                 #user_list = datas.find_elements_by_xpath(selectors.get("status_user_list"))
                 
                 for user in user_list:
-                    users.append(user.get_attribute('href'))
+                    print(user)
+                    users.append({'url':user.get_attribute('href')})
             except Exception as e:
                 print(e)
                 pass
@@ -979,17 +988,32 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         print('get comments')
         comments = get_comments()
         download_photos = image_downloader(photos, photos_dir)
+
+        # Update comments and likes
+        commentIdx = len(indbComments)
+        for i in range(commentIdx, len(comments)-1, 1):
+            comments[i]['etlStatus'] = False
+            indbComments.append(comments[i])
+
+        likeIdx = len(indbLikes)
+        for i in range(likeIdx, len(users)-1, 1):
+            users[i]['etlStatus'] = False
+            indbLikes.append(users[i])
+
         material['post_id'] = post_id
         material['time'] = ctime
         material['title'] = title
         material['link'] = link
         material['message'] = post_message
-        material['comments'] = comments
+        material['comments'] = indbComments
         material['photos'] = photos
         material['download_photos'] = download_photos
         material['category'] = category
-        material['interactions'] = users
+        material['interactions'] = indbLikes
         #storage.insert_posts(material)
+
+        print('=======material =========')
+        print(material)
         storage.update_post(material)
         line = (
             str(ctime)
