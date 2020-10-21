@@ -358,7 +358,9 @@ def extract_and_write_group_posts(elements, filename):
                 els = driver.find_elements_by_xpath(selectors.get("group_id"))
                 for y in els:
                     try:
+                        
                         post_id = y.get_attribute("href")
+                        print(post_id)
                         regex = re.compile('\w+\/(groups\/\d+\/permalink\/\d+\/).')
                         
                         post_id = regex.findall(post_id)
@@ -860,7 +862,7 @@ def get_comments():
                 author = d.find_element_by_xpath(selectors.get("comment_author")).text
                 profile = d.find_element_by_xpath(selectors.get("comment_author_href")).get_attribute('href')
                 #profile = profile[0:profile.find('?comment_id')]
-                regex = re.compile('(\w+\/groups\/\d+\/user\/\d+\/).')
+                regex = re.compile('(.+\/groups\/\d+\/user\/\d+\/).')
                 profile = regex.findall(profile)[0]
                 text = d.text
                 replies = utils.get_replies(d, selectors)

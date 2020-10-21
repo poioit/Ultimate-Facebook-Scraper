@@ -44,6 +44,37 @@ def rest_insert_posts(posts):
 def set_collection(dst):
     global collection
     collection = dst
+
+
+def update_user(user):
+    client = MongoClient('52.194.223.156',
+    username='db_agent',
+    password='Ie!5Og@rHPAe',
+    authSource='admin',
+    authMechanism='SCRAM-SHA-256')
+    print('in update user')
+    print(client)
+    with client:
+        timenow = datetime.datetime.now()
+        try:
+            db = client['luxurai_backend'] 
+            if db['fb_users'].find({'user_id': user['user_id']}).count()==0:
+                print('insert')
+                user['createdAt']=timenow
+                user['updatedAt']=timenow
+                db['fb_users'].insert(user)
+            else:
+                print('update')
+                db['fb_users'].update_one(
+                    {'user_id': user['user_id']},
+                    {'$set':{
+                        'updatedAt': timenow,
+                        'comments': user['comments']
+                    }}
+                )
+        except:
+            print("Unexpected error:", sys.exc_info())
+    pass
     
 def update_post(posts):
     
