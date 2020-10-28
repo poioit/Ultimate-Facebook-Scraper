@@ -7,7 +7,13 @@ from simple_rest_client.api import API
 from simple_rest_client.resource import Resource
 from bson.objectid import ObjectId
 
-
+local_dbaddr = 'localhost'
+remote_dbaddr = '52.194.223.156'
+db_username = 'db_agent'
+db_passwd = 'Ie!5Og@rHPAe'
+db_authsource = 'admin'
+db_authMechanism = 'SCRAM-SHA-256'
+current_dbaddr = local_dbaddr
 class HelpbuysResource(Resource):
     actions = {
         "retrieve_latest": {"method": "GET", "url": "helpbuys?%24limit=1&$sort[time]=-1"},
@@ -47,29 +53,29 @@ def set_collection(dst):
 
 
 def update_user(user):
-    client = MongoClient('52.194.223.156',
+    client = MongoClient(current_dbaddr,
     username='db_agent',
     password='Ie!5Og@rHPAe',
     authSource='admin',
     authMechanism='SCRAM-SHA-256')
-    print('in update user')
-    print(client)
+    #print('in update user')
+    #print(client)
     with client:
         timenow = datetime.datetime.now()
         try:
             db = client['luxurai_backend'] 
             if db['fb_users'].find({'user_id': user['user_id']}).count()==0:
-                print('insert')
+                #print('insert')
                 user['createdAt']=timenow
                 user['updatedAt']=timenow
                 db['fb_users'].insert(user)
             else:
-                print('update')
+                #print('update')
                 db['fb_users'].update_one(
                     {'user_id': user['user_id']},
                     {'$set':{
                         'updatedAt': timenow,
-                        'comments': user['comments']
+                        'group_ids': user['group_ids']
                     }}
                 )
         except:
@@ -163,4 +169,26 @@ def get_post(post_id, db = 'luxurai_backend'):
         print('unexpected error:', sys.exc_info())
 
     return post
+
+def get_fbuser(user_id, db = 'luxurai_backend'):
+
+    user = {}
+
+    if user_id == '':
+        return []
+    
+    try:
+        client = MongoClient(current_dbaddr,
+        username=db_username,
+        password=db_passwd,
+        authSource=db_authsource,
+        authMechanism=db_authMechanism)      
+        with client:
+            db = client['luxurai_backend']
+            user = db['fb_users'].find_one({'user_id': user_id})            
+        
+    except:
+        print('unexpected error:', sys.exc_info())
+
+    return user
 

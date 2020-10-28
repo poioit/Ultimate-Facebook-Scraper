@@ -433,6 +433,42 @@ def extract_and_write_fan_posts(elements, filename):
         print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     return
 
+def extract_and_write_group_members(elements, filename):
+    try:
+        f = create_post_file(filename)
+        user_list = []
+        current_url = driver.current_url
+        regex = re.compile('.+\/groups\/(\d+)\/.+')
+        group = regex.findall(current_url)[0]
+        for x in elements:
+            try:
+                user_profile = {}
+                user_id = x.get_attribute("href")
+                regex = re.compile('.+\/(\d+)')
+                user_id = regex.findall(user_id)[0]
+                print(user_id)
+                user_profile['user_id'] = user_id
+                user_profile['name'] = x.text
+                user_profile['group_ids'] = [group]
+                user_list.append(user_profile)
+                cur_user = storage.get_fbuser(user_id)
+                if cur_user is not None and group not in cur_user['group_ids']:
+                    cur_user['group_ids'].append(group)
+                    user_profile = cur_user
+                elif cur_user is not None:
+                    continue
+                storage.update_user(user_profile)
+            except Exception:
+                pass
+        total = len(user_list)
+        print(total)
+        f.close()
+    except ValueError:
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
+    except Exception:
+        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
+    return
+
 
 def add_group_post_to_file(f, filename, post_id, number=1, total=1, latest_time=None, reload=False):
     print("Scraping Post(" + post_id + "). " + str(number) + " of " + str(total))
@@ -636,13 +672,8 @@ def save_to_file(name, elements, status, current_section):
         # dealing with Group Members
         elif status == 7:
             # get profile links of members
-            for x in elements:
-                print(x.get_attribute("href"))
-            results = [x.get_attribute("href") for x in elements]
-
-            # get names of members
-            people_names = [x.text for x in elements]
-            # save to database
+            extract_and_write_group_members(elements, name)
+            
             
             
 
