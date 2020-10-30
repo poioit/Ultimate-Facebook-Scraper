@@ -13,7 +13,7 @@ db_username = 'db_agent'
 db_passwd = 'Ie!5Og@rHPAe'
 db_authsource = 'admin'
 db_authMechanism = 'SCRAM-SHA-256'
-current_dbaddr = local_dbaddr
+current_dbaddr = remote_dbaddr
 class HelpbuysResource(Resource):
     actions = {
         "retrieve_latest": {"method": "GET", "url": "helpbuys?%24limit=1&$sort[time]=-1"},

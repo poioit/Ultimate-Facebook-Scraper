@@ -44,5 +44,7 @@
   "comment_reply" : "..//..//div[@class='l9j0dhe7 ecm0bbzt hv4rvrfc qt6c0cv9 scb9dxdr j83agx80 btwxx1t3 lzcic4wl']",
   "comment_reply_tw" : "..//..//div[@aria-label='留言回覆']",
   "group_category" : "//*[@id='seo_h1_tag']/a",
+  "group_member_link" : "./span/div/a",
+  "group_member_photo" : "../../../../../..//div[@class='q9uorilb l9j0dhe7 pzggbiyp du4w35lb']/*[@class='pzggbiyp']/*/*[@width='100%']",
   "group_id" : "//a[starts-with(@class,'oajrlxb2 g5ia77u1 qu0x051f esr5mh6w e9989ue4 r7d6kgcz rq0escxv nhd2j8a9 nc684nl6 p7hjln8o kvgmc6g5 cxmmr5t8 oygrvhab hcukyx3x jb3vyjys rz4wbd8a qt6c0cv9 a8nywdso i1ao9s8h esuyzwwr f1sip0of lzcic4wl gmql0nx0 gpro0wi8 b1v8xokw')]"
 }

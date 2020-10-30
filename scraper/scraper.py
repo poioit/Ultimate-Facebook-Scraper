@@ -440,16 +440,20 @@ def extract_and_write_group_members(elements, filename):
         current_url = driver.current_url
         regex = re.compile('.+\/groups\/(\d+)\/.+')
         group = regex.findall(current_url)[0]
-        for x in elements:
+        for y in elements:
             try:
+                #x = y.find_elements_by_xpath("../../../../..//div[@class='q9uorilb l9j0dhe7 pzggbiyp du4w35lb']/*[@class='pzggbiyp']/*")
+                photolink = y.find_elements_by_xpath(selectors.get("group_member_photo"))[0]
+                urllink = y.find_elements_by_xpath(selectors.get("group_member_link"))[0]
                 user_profile = {}
-                user_id = x.get_attribute("href")
+                user_id = urllink.get_attribute("href")
                 regex = re.compile('.+\/(\d+)')
                 user_id = regex.findall(user_id)[0]
                 print(user_id)
                 user_profile['user_id'] = user_id
-                user_profile['name'] = x.text
+                user_profile['name'] = urllink.text
                 user_profile['group_ids'] = [group]
+                user_profile['photo'] = photolink.get_attribute("xlink:href")
                 user_list.append(user_profile)
                 cur_user = storage.get_fbuser(user_id)
                 if cur_user is not None and group not in cur_user['group_ids']:
@@ -752,8 +756,9 @@ def scrape_data(url, scan_list, section, elements_path, save_status, file_names)
 
                 if sections_bar.text.find(scan_list[i]) == -1:
                     continue
-
-            if save_status != 3:
+            if save_status == 7:
+                utils.scroll_to_bottom(driver)
+            elif save_status != 3:
                 utils.scroll(total_scrolls, driver, selectors, scroll_time)
                 pass
 
@@ -893,7 +898,7 @@ def get_comments():
                 author = d.find_element_by_xpath(selectors.get("comment_author")).text
                 profile = d.find_element_by_xpath(selectors.get("comment_author_href")).get_attribute('href')
                 #profile = profile[0:profile.find('?comment_id')]
-                regex = re.compile('(.+\/groups\/\d+\/user\/\d+\/).')
+                regex = re.compile('.+\/groups\/\d+\/user\/(\d+)\/.')
                 profile = regex.findall(profile)[0]
                 text = d.text
                 replies = utils.get_replies(d, selectors)

@@ -5,6 +5,7 @@ from calendar import calendar
 
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
+import time
 
 
 # -----------------------------------------------------------------------------
@@ -64,6 +65,32 @@ def scroll(total_scrolls, driver, selectors, scroll_time):
 
     return
 
+def scroll_to_bottom(driver):
+
+    old_position = 0
+    new_position = None
+    counter = 0
+    while new_position != old_position:
+        counter += 1
+        if counter%500 == 0:
+            print(counter)
+            time.sleep(5)
+        # Get old scroll position
+        old_position = driver.execute_script(
+                ("return (window.pageYOffset !== undefined) ?"
+                 " window.pageYOffset : (document.documentElement ||"
+                 " document.body.parentNode || document.body);"))
+        # Sleep and Scroll
+        time.sleep(3+counter/200)
+        driver.execute_script((
+                "var scrollingElement = (document.scrollingElement ||"
+                " document.body);scrollingElement.scrollTop ="
+                " scrollingElement.scrollHeight;"))
+        # Get new position
+        new_position = driver.execute_script(
+                ("return (window.pageYOffset !== undefined) ?"
+                 " window.pageYOffset : (document.documentElement ||"
+                 " document.body.parentNode || document.body);"))
 
 # -----------------------------------------------------------------------------
 # Helper Functions for Posts
