@@ -54,10 +54,10 @@ def set_collection(dst):
 
 def update_user(user):
     client = MongoClient(current_dbaddr,
-    username='db_agent',
-    password='Ie!5Og@rHPAe',
-    authSource='admin',
-    authMechanism='SCRAM-SHA-256')
+    username=db_username,
+    password=db_passwd,
+    authSource=db_authsource,
+    authMechanism=db_authMechanism)
     #print('in update user')
     #print(client)
     with client:
@@ -85,11 +85,11 @@ def update_user(user):
 def update_post(posts):
     
     # client = MongoClient('mongodb://localhost:27017/luxurai_backend?authSource=admin', username='db_agent', password='Ie!5Og@rHPAe')
-    client = MongoClient('52.194.223.156',
-    username='db_agent',
-    password='Ie!5Og@rHPAe',
-    authSource='admin',
-    authMechanism='SCRAM-SHA-256')
+    client = MongoClient(current_dbaddr,
+    username=db_username,
+    password=db_passwd,
+    authSource=db_authsource,
+    authMechanism=db_authMechanism)
     print('in update post')
     print(client)
     with client:
@@ -130,11 +130,11 @@ def rest_get_posts(db = 'luxurai_backend'):
 
 def get_posts(db = 'luxurai_backend'):
     try:
-        client = MongoClient('52.194.223.156',
-        username='db_agent',
-        password='Ie!5Og@rHPAe',
-        authSource='admin',
-        authMechanism='SCRAM-SHA-256')      
+        client = MongoClient(current_dbaddr,
+        username=db_username,
+        password=db_passwd,
+        authSource=db_authsource,
+        authMechanism=db_authMechanism)      
         with client:
         
             record = list(client[db][collection].aggregate([{"$sort":{"time":-1}}, {"$limit":1}]))
@@ -156,11 +156,11 @@ def get_post(post_id, db = 'luxurai_backend'):
         return []
     
     try:
-        client = MongoClient('52.194.223.156',
-        username='db_agent',
-        password='Ie!5Og@rHPAe',
-        authSource='admin',
-        authMechanism='SCRAM-SHA-256')      
+        client = MongoClient(current_dbaddr,
+        username=db_username,
+        password=db_passwd,
+        authSource=db_authsource,
+        authMechanism=db_authMechanism)      
         with client:
             db = client['luxurai_backend']
             post = db['helpbuys'].find_one({'post_id': post_id})            
