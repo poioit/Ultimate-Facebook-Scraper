@@ -360,8 +360,8 @@ def extract_and_write_group_posts(elements, filename):
                     try:
                         
                         post_id = y.get_attribute("href")
-                        print(post_id)
-                        regex = re.compile('\w+\/(groups\/\d+\/permalink\/\d+\/).')
+                        #print(post_id)
+                        regex = re.compile('\w+\/(groups\/\w+\/permalink\/\d+\/).')
                         
                         post_id = regex.findall(post_id)
                         if len(post_id):
@@ -438,7 +438,7 @@ def extract_and_write_group_members(elements, filename):
         f = create_post_file(filename)
         user_list = []
         current_url = driver.current_url
-        regex = re.compile('.+\/groups\/(\d+)\/.+')
+        regex = re.compile('.+\/groups\/(\w+)\/.+')
         group = regex.findall(current_url)[0]
         for y in elements:
             try:
@@ -881,7 +881,8 @@ def get_comments():
         for link in reply_links:
             try:
                 driver.execute_script("arguments[0].click();", link)
-            except Exception:
+            except Exception as e:
+                print(e)
                 pass
         see_more_links = driver.find_elements_by_xpath(
             selectors.get("comment_see_more_link")
@@ -889,23 +890,26 @@ def get_comments():
         for link in see_more_links:
             try:
                 driver.execute_script("arguments[0].click();", link)
-            except Exception:
+            except Exception as e:
+                print(e)
                 pass
         replytime = time.time()
-        data = data.find_elements_by_xpath(selectors.get("comment"))
+        data = driver.find_elements_by_xpath(selectors.get("comment"))
         for d in data:
             try:
                 author = d.find_element_by_xpath(selectors.get("comment_author")).text
                 profile = d.find_element_by_xpath(selectors.get("comment_author_href")).get_attribute('href')
                 #profile = profile[0:profile.find('?comment_id')]
-                regex = re.compile('.+\/groups\/\d+\/user\/(\d+)\/.')
+                regex = re.compile('.+\/groups\/\w+\/user\/(\d+)\/.')
                 profile = regex.findall(profile)[0]
                 text = d.text
                 replies = utils.get_replies(d, selectors)
                 comments.append({'author':author, 'text':text, 'profile':profile, 'replies':replies})
-            except Exception:
+            except Exception as e:
+                print(e)
                 pass
-    except Exception:
+    except Exception as e:
+        print(e)
         pass
     end = time.time()
     print("end - start:" + str(end-start))
@@ -918,8 +922,8 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
 
         indbComments = []
         indbLikes = []
-        post = storage.get_post('groups/554988961178275/permalink/4960929310584196/')
-        if 'post_id' in post.keys():
+        post = storage.get_post(post_id)
+        if post and 'post_id' in post.keys():
             indbComments = post['comments']
             indbLikes = post['interactions']
 
@@ -981,8 +985,8 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         except Exception:
             print('get title error')
             pass
-        print(category + title)
-        
+        print("category:" + category)
+        print("title:" + title)
         # link, status, title, type = get_status_and_title(title,data)
         #link = utils.get_div_links(data, "a", selectors)
         #if link != "":
@@ -1000,19 +1004,31 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
                 hov.move_to_element(status).click().perform()
                 sleep(0.5)
                 popupdiv = driver.find_element_by_xpath(selectors.get("status_all_list"))
+                #get the scroll window
                 mooddiv = driver.find_element_by_xpath(selectors.get("status_mood"))
-                driver.execute_script("arguments[0].scrollIntoView(true);",mooddiv)
+                try:
+                    driver.execute_script("arguments[0].scrollIntoView(true);",mooddiv)
+                except Exception as e:
+                    print(e)
+                print(count)
                 sleep((count/20+1)*0.5)
-                user_list = popupdiv.find_elements_by_xpath(selectors.get("status_user_list"))
-                #user_list = datas.find_elements_by_xpath(selectors.get("status_user_list"))
-                
-                for user in user_list:
-                    print(user)
-                    users.append({'url':user.get_attribute('href')})
+                try:
+                    user_list = driver.find_elements_by_xpath(selectors.get("status_user_list"))
+                    #user_list = datas.find_elements_by_xpath(selectors.get("status_user_list"))
+                except Exception as e:
+                    print(e)
+                finally:
+                    index = 1
+                    for user in user_list:
+                        if user.text is not '' and '#' not in user.text:
+                            print(str(index) + ":" + user.text)
+                            index += 1
+                            users.append({'url':user.get_attribute('href'),
+                            'name':user.text})
             except Exception as e:
                 print(e)
                 pass
-            else:
+            finally:
                 
                 print('response close start')
                 try:
