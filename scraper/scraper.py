@@ -908,12 +908,13 @@ def get_comments():
             except Exception as e:
                 print(e)
                 pass
+        end = time.time()
+        print("end - start:" + str(end-start))
+        print("end - reply:" + str(end-replytime))
     except Exception as e:
         print(e)
         pass
-    end = time.time()
-    print("end - start:" + str(end-start))
-    print("end - reply:" + str(end-replytime))
+    
     return comments
 
 
