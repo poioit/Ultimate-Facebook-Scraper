@@ -6,7 +6,18 @@ from calendar import calendar
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 import time
+import pytz
 
+
+def utc_to_time(naive, timezone="Asia/Taipei"):
+    return naive.replace(tzinfo=pytz.utc).astimezone(pytz.timezone(timezone))
+
+
+def time_to_utc(naive, timezone="Asia/Taipei"):
+    local = pytz.timezone(timezone)
+    local_dt = local.localize(naive, is_dst=None)
+    utc_dt = local_dt.astimezone(pytz.utc)
+    return utc_dt
 
 # -----------------------------------------------------------------------------
 #
@@ -81,7 +92,7 @@ def scroll_to_bottom(driver):
                  " window.pageYOffset : (document.documentElement ||"
                  " document.body.parentNode || document.body);"))
         # Sleep and Scroll
-        time.sleep(3+counter/200)
+        time.sleep(3+counter/50)
         driver.execute_script((
                 "var scrollingElement = (document.scrollingElement ||"
                 " document.body);scrollingElement.scrollTop ="
@@ -305,3 +316,9 @@ def safe_find_element_by_id(driver, elem_id):
         return driver.find_element_by_id(elem_id)
     except NoSuchElementException:
         return None
+
+def contains(list, filter):
+    for x in list:
+        if filter(x):
+            return True
+    return False

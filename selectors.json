@@ -18,7 +18,7 @@
   "background_img_links": "//*[contains(@id, 'pic_')]/div/i",
   "firefox_profile_path": "/home/zeryx/.mozilla/firefox/0n8gmjoz.bot",
   "facebook_https_prefix": "https://",
-  "facebook_link_body": ".facebook.com/",
+  "facebook_link_body": "www.facebook.com/",
   "spotlight": "spotlight",
   "default_image": "10354686_10150004552801856_220367501106153455_n.jpg",
   "height_script": "return document.body.scrollHeight",
@@ -46,5 +46,6 @@
   "group_category" : "//*[@id='seo_h1_tag']/a",
   "group_member_link" : "./span/div/a",
   "group_member_photo" : "../../../../../..//div[@class='q9uorilb l9j0dhe7 pzggbiyp du4w35lb']/*[@class='pzggbiyp']/*/*[@width='100%']",
-  "group_id" : "//a[starts-with(@class,'oajrlxb2 g5ia77u1 qu0x051f esr5mh6w e9989ue4 r7d6kgcz rq0escxv nhd2j8a9 nc684nl6 p7hjln8o kvgmc6g5 cxmmr5t8 oygrvhab hcukyx3x jb3vyjys rz4wbd8a qt6c0cv9 a8nywdso i1ao9s8h esuyzwwr f1sip0of lzcic4wl gmql0nx0 gpro0wi8 b1v8xokw')]"
+  "group_id" : "//a[starts-with(@class,'oajrlxb2 g5ia77u1 qu0x051f esr5mh6w e9989ue4 r7d6kgcz rq0escxv nhd2j8a9 nc684nl6 p7hjln8o kvgmc6g5 cxmmr5t8 oygrvhab hcukyx3x jb3vyjys rz4wbd8a qt6c0cv9 a8nywdso i1ao9s8h esuyzwwr f1sip0of lzcic4wl gmql0nx0 gpro0wi8 b1v8xokw')]",
+  "user_added_date" : "//span[@class='d2edcug0 hpfvmrgz qv66sw1b c1et5uql oi732d6d ik7dh3pa fgxwclzu a8c37x1j keod5gw0 nxhoafnm aigsh9s9 d9wwppkn fe6kdd0r mau55g9w c8b282yb iv3no6db jq4qci2q a3bd9o3v knj5qynh oo9gr5id hzawbc8m']"
 }

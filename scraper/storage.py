@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-import sys
+
 import time
 import locale
 import datetime
@@ -70,14 +70,29 @@ def update_user(user):
                 user['updatedAt']=timenow
                 db['fb_users'].insert(user)
             else:
-                #print('update')
-                db['fb_users'].update_one(
-                    {'user_id': user['user_id']},
-                    {'$set':{
-                        'updatedAt': timenow,
-                        'group_ids': user['group_ids']
-                    }}
-                )
+                if user['user_id'] == '100002550053142':
+                    print(user['user_id'])
+                if not 'join_groups' in user:
+                    print('update photo')
+                    db['fb_users'].update_one(
+                        {'user_id': user['user_id']},
+                        {'$set':{
+                            'updatedAt': timenow,
+                            'group_ids': user['group_ids'],
+                            'photo': user['photo']
+                        }}
+                    )
+                else:
+                    print('update groups')
+                    db['fb_users'].update_one(
+                        {'user_id': user['user_id']},
+                        {'$set':{
+                            'updatedAt': timenow,
+                            'group_ids': user['group_ids'],
+                            'photo': user['photo'],
+                            'join_groups': user['join_groups']
+                        }}
+                    )
         except:
             print("Unexpected error:", sys.exc_info())
     pass
@@ -108,7 +123,8 @@ def update_post(posts):
                     {'$set':{
                         'updatedAt': timenow,
                         'comments': posts['comments'],
-                        'interactions': posts['interactions']
+                        'interactions': posts['interactions'],
+                        'postisotime': posts['postisotime']
                     }}
                 )
         except:
@@ -191,4 +207,26 @@ def get_fbuser(user_id, db = 'luxurai_backend'):
         print('unexpected error:', sys.exc_info())
 
     return user
+
+def get_fbpost(post_id, db = 'luxurai_backend'):
+
+    post = {}
+
+    if post_id == '':
+        return []
+    
+    try:
+        client = MongoClient(current_dbaddr,
+        username=db_username,
+        password=db_passwd,
+        authSource=db_authsource,
+        authMechanism=db_authMechanism)      
+        with client:
+            db = client['luxurai_backend']
+            post = db['helpbuys'].find_one({'post_id': post_id})            
+        
+    except:
+        print('unexpected error:', sys.exc_info())
+
+    return post
 

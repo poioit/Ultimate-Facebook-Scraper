@@ -14,6 +14,8 @@ from sys import platform as _platform
 from time import sleep
 from datetime import datetime
 import re
+##for timezone
+from pytz import timezone
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -28,6 +30,7 @@ from selenium.common import exceptions
 #import pyautogui
 import storage 
 import requests
+import time
 
 TELEGRAM_API_ROOT = 'https://api.telegram.org/'
 apiURL = ''
@@ -392,6 +395,7 @@ def extract_and_write_group_posts(elements, filename):
         # latest_time = storage.get_posts('luxurai_backend')
         # print(latest_time)
         for post_id in ids:
+            #post_id = 'groups/raymond30/permalink/369709753999151/'
             i += 1
             try:
                 add_group_post_to_file(f, filename, post_id, i, total, None, reload=True)
@@ -399,9 +403,19 @@ def extract_and_write_group_posts(elements, filename):
                 pass
         f.close()
     except ValueError:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
+        frame = inspect.currentframe()
+        # __FILE__
+        fileName  =  frame.f_code.co_filename
+        # __LINE__
+        fileNo = frame.f_lineno
+        print(fileName + str(fileNo) + "Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     except Exception:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
+        frame = inspect.currentframe()
+        # __FILE__
+        fileName  =  frame.f_code.co_filename
+        # __LINE__
+        fileNo = frame.f_lineno
+        print(fileName + str(fileNo) + "Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     return
 
 def extract_and_write_fan_posts(elements, filename):
@@ -446,26 +460,65 @@ def extract_and_write_group_members(elements, filename):
                 photolink = y.find_elements_by_xpath(selectors.get("group_member_photo"))[0]
                 urllink = y.find_elements_by_xpath(selectors.get("group_member_link"))[0]
                 user_profile = {}
-                user_id = urllink.get_attribute("href")
+                user_ref = urllink.get_attribute("href")
                 regex = re.compile('.+\/(\d+)')
-                user_id = regex.findall(user_id)[0]
+                user_id = regex.findall(user_ref)[0]
                 print(user_id)
                 user_profile['user_id'] = user_id
                 user_profile['name'] = urllink.text
                 user_profile['group_ids'] = [group]
                 user_profile['photo'] = photolink.get_attribute("xlink:href")
-                user_list.append(user_profile)
+                
                 cur_user = storage.get_fbuser(user_id)
                 if cur_user is not None and group not in cur_user['group_ids']:
                     cur_user['group_ids'].append(group)
                     user_profile = cur_user
-                elif cur_user is not None:
-                    continue
+                user_list.append(user_profile)
+                # we still need to update the user photo
+                #elif cur_user is not None:
+                #    continue
+                #remove here to update in the following process
+                #if not cur_user:
                 storage.update_user(user_profile)
             except Exception:
                 pass
         total = len(user_list)
         print(total)
+        groupurl = 'https://www.facebook.com/groups/' + group + '/user/'
+        profile_page = [groupurl + user['user_id'] for user in user_list]
+        for i, _ in enumerate(profile_page):
+            try:
+                cur_user = storage.get_fbuser(user_list[i]['user_id'])
+                if (cur_user is not None) and ( not 'join_groups' in cur_user or ('join_groups' in cur_user and not utils.contains(cur_user['join_groups'],lambda x: x['group_id'] == group))):
+                    print(i)
+                    driver.get(profile_page[i])
+                    driver.implicitly_wait(60)
+                    sleep(5)
+                    user_added_date = driver.find_elements_by_xpath(
+                                selectors.get("user_added_date")
+                            )
+                    for j, _ in enumerate(user_added_date):
+                        if( hasattr(user_added_date[j],'text')):
+                            #print(user_added_date[j].text)
+                            regex = re.compile('(\d+年.+月.+日).+')
+                            added_date = regex.findall(user_added_date[j].text)
+                            if len(added_date):
+                                print(added_date[0])
+                                join_date = datetime.strptime(added_date[0], "%Y年%m月%d日")
+                                join_date = timezone('Asia/Taipei').localize(join_date)
+                                if not hasattr(user_list[i],'join_groups'):
+                                    user_list[i]['join_groups'] = []
+                                else:
+                                    user_list[i]['join_groups'] = cur_user['join_groups']
+                                user_list[i]['join_groups'].append({'group_id':group, 'join_date':join_date})
+                                
+                                storage.update_user(user_list[i])
+                                break
+                    driver.get('https://www.facebook.com/groups/' + group + '/members/')
+                driver.implicitly_wait(60)
+                sleep(5)
+            except Exception:
+                pass
         f.close()
     except ValueError:
         print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
@@ -724,6 +777,7 @@ def save_to_file(name, elements, status, current_section):
 
     except Exception:
         print("Exception (save_to_file)", "Status =", str(status), sys.exc_info())
+        pass
 
     return
 
@@ -940,13 +994,20 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
             for celement in ctimes:
                 simpletime = celement.text
                 
-                regex = re.compile("\d+月\d+日\w+")
+                regex = re.compile("\d+年\d+月\d+日\w+")
                 arr_time = regex.findall(simpletime)
                 if len(arr_time) == 0:
                     simpletime = datetime.now().strftime('%m月%d日')
-                    
-                print("simple time:" + simpletime)
-                ctime = simpletime
+                hov = ActionChains(driver)
+                hov.move_to_element(celement).perform()
+                sleep(0.5)
+                fulltime = driver.find_element_by_xpath(selectors.get("ctime")).text
+                
+                
+                if(fulltime):
+                    ctime = fulltime
+                print("ctime:" + ctime)
+                print("full time:" + fulltime)
                 break
                 #datetime_object = datetime.strptime(celement.text, '%m/%d/%y %H:%M:%S')
                 '''
@@ -1003,16 +1064,24 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
                 count = int(status.text.split('\n')[0])
                 hov = ActionChains(driver)
                 hov.move_to_element(status).click().perform()
-                sleep(0.5)
+                sleep(1)
                 popupdiv = driver.find_element_by_xpath(selectors.get("status_all_list"))
                 #get the scroll window
-                mooddiv = driver.find_element_by_xpath(selectors.get("status_mood"))
-                try:
-                    driver.execute_script("arguments[0].scrollIntoView(true);",mooddiv)
-                except Exception as e:
-                    print(e)
+                mooddiv = driver.find_elements_by_xpath(selectors.get("status_mood"))
+                mooddiv = mooddiv[len(mooddiv)-1]
                 print(count)
-                sleep((count/20+1)*0.5)
+                # FB if there is a notification
+                # this will get the notification window
+                # we need to force to get the last one
+                for i in range(int(count/5+1) ):
+                    print('scroll:' + str(i))
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView(true);",mooddiv)
+                        sleep(2)
+                    except Exception as e:
+                        print(e)
+                    
+                
                 try:
                     user_list = driver.find_elements_by_xpath(selectors.get("status_user_list"))
                     #user_list = datas.find_elements_by_xpath(selectors.get("status_user_list"))
@@ -1069,9 +1138,20 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         for i in range(likeIdx, len(users)-1, 1):
             users[i]['etlStatus'] = False
             indbLikes.append(users[i])
-
+        locale.setlocale(locale.LC_ALL, 'zh_TW.utf-8')
         material['post_id'] = post_id
         material['time'] = ctime
+        db_post = storage.get_fbpost(post_id)
+        postisotime = re.sub('星期.', '', ctime)
+        print(postisotime)
+        if 'postiostime' not in db_post and postisotime != '':
+            postisotime = datetime.strptime(postisotime, "%Y年%m月%d日 %p%I:%M")
+            postisotime = timezone('Asia/Taipei').localize(postisotime)
+        elif 'postiostime' in db_post:
+            postisotime = db_post.postisotime
+        else:
+            postisotime = ctime
+        material['postisotime'] = postisotime
         material['title'] = title
         material['link'] = link
         material['message'] = post_message
@@ -1114,7 +1194,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         fileName  =  frame.f_code.co_filename
         # __LINE__
         fileNo = frame.f_lineno
-        print(fileName + fileNo + 'unexpected error:', sys.exc_info())
+        print(fileName + str(fileNo) + 'unexpected error:', sys.exc_info())
         return ''
 
 
