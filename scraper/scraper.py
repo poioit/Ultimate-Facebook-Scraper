@@ -1144,7 +1144,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         db_post = storage.get_fbpost(post_id)
         postisotime = re.sub('星期.', '', ctime)
         print(postisotime)
-        if 'postiostime' not in db_post and postisotime != '':
+        if (db_post is None or 'postiostime' not in db_post) and postisotime != '':
             postisotime = datetime.strptime(postisotime, "%Y年%m月%d日 %p%I:%M")
             postisotime = timezone('Asia/Taipei').localize(postisotime)
         elif 'postiostime' in db_post:

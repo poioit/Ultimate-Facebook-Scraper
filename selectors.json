@@ -1,7 +1,7 @@
 {
   "status": ".//div[@class='oajrlxb2 g5ia77u1 qu0x051f esr5mh6w e9989ue4 r7d6kgcz rq0escxv nhd2j8a9 a8c37x1j p7hjln8o kvgmc6g5 cxmmr5t8 oygrvhab hcukyx3x jb3vyjys rz4wbd8a qt6c0cv9 a8nywdso i1ao9s8h esuyzwwr f1sip0of lzcic4wl l9j0dhe7 abiwlrkh p8dawk7l gmql0nx0 ce9h75a5 ni8dbmo4 stjgntxs']",
   "status_list": ".//ul[@class='hcukyx3x tvmbv18p cxmmr5t8 aahdfvyu']",
-  "status_all_list": ".//div[@class='ll8tlv6m j83agx80 taijpn5t hzruof5a']",
+  "status_all_list": ".//div[@class='rq0escxv l9j0dhe7 du4w35lb ll8tlv6m j83agx80 taijpn5t hzruof5a']",
   "status_user_list": ".//a[@class='oajrlxb2 g5ia77u1 qu0x051f esr5mh6w e9989ue4 r7d6kgcz rq0escxv nhd2j8a9 nc684nl6 p7hjln8o kvgmc6g5 cxmmr5t8 oygrvhab hcukyx3x jb3vyjys rz4wbd8a qt6c0cv9 a8nywdso i1ao9s8h esuyzwwr f1sip0of lzcic4wl oo9gr5id gpro0wi8 lrazzd5p']",
   "status_divclose": ".//div[@aria-label='關閉']",
   "status_mood": ".//div[@class='j83agx80 cbu4d94t buofh1pr l9j0dhe7']/*[last()]",
@@ -27,7 +27,8 @@
   "title_text_fan": "//a[contains(@id, 'js_')]",
   "profilePicThumb": "profilePicThumb",
   "fb_link": "https://en-gb.facebook.com/",
-  "single_post" : ".//div[@class='rq0escxv l9j0dhe7 du4w35lb hybvsw6c ue3kfks5 pw54ja7n uo3d90p7 l82x9zwi ni8dbmo4 stjgntxs k4urcfbm sbcfpzgs']",
+  
+  "single_post" : ".//div[@class='rq0escxv l9j0dhe7 du4w35lb hybvsw6c ue3kfks5 pw54ja7n uo3d90p7 l82x9zwi k4urcfbm ni8dbmo4 stjgntxs sbcfpzgs']",
   "post_photos": ".//div[contains(@class, 'ni8dbmo4 stjgntxs pmk7jnqg')]",
   "post_photo_small" : ".//img[contains(@class, 'i09qtzwb n7fi1qx3 datstx6m pmk7jnqg j9ispegn kr520xx4 k4urcfbm')]",
   "post_photo_small_opt1" : ".//img[contains(@class, 'scaledImageFitWidth') or contains(@class, 'scaledImageFitHeight')]",
