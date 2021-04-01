@@ -1145,7 +1145,10 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         postisotime = re.sub('星期.', '', ctime)
         print(postisotime)
         if (db_post is None or 'postiostime' not in db_post) and postisotime != '':
-            postisotime = datetime.strptime(postisotime, "%Y年%m月%d日 %p%I:%M")
+            try:
+                postisotime = datetime.strptime(postisotime, "%Y年%m月%d日 %p%I:%M")
+            except:
+                postisotime = datetime.strptime(postisotime, "%m月%d日")
             postisotime = timezone('Asia/Taipei').localize(postisotime)
         elif 'postiostime' in db_post:
             postisotime = db_post.postisotime
