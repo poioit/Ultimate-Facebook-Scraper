@@ -439,12 +439,13 @@ def extract_and_write_fan_posts(elements, filename):
             try:
                 add_group_post_to_file(f, filename, post_href, i, total, latest_time, reload=False)
             except ValueError:
+                print('value error')
                 pass
         f.close()
     except ValueError:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
+        print("Exception (extract_and_write_fan_posts)", "Status =", sys.exc_info())
     except Exception:
-        print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
+        print("Exception (extract_and_write_fan_posts)", "Status =", sys.exc_info())
     return
 
 def extract_and_write_group_members(elements, filename):
@@ -811,6 +812,7 @@ def scrape_data(url, scan_list, section, elements_path, save_status, file_names)
                 if sections_bar.text.find(scan_list[i]) == -1:
                     continue
             if save_status == 7:
+                #utils.scroll(total_scrolls, driver, selectors, scroll_time)
                 utils.scroll_to_bottom(driver)
             elif save_status != 3:
                 utils.scroll(total_scrolls, driver, selectors, scroll_time)
@@ -1065,7 +1067,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
                 hov = ActionChains(driver)
                 hov.move_to_element(status).click().perform()
                 sleep(1)
-                popupdiv = driver.find_element_by_xpath(selectors.get("status_all_list"))
+                #popupdiv = driver.find_element_by_xpath(selectors.get("status_all_list"))
                 #get the scroll window
                 mooddiv = driver.find_elements_by_xpath(selectors.get("status_mood"))
                 mooddiv = mooddiv[len(mooddiv)-1]

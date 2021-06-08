@@ -6,9 +6,10 @@ import datetime
 from simple_rest_client.api import API
 from simple_rest_client.resource import Resource
 from bson.objectid import ObjectId
+import sys
 
 local_dbaddr = 'localhost'
-remote_dbaddr = '52.194.223.156'
+remote_dbaddr = '13.230.176.68'
 db_username = 'db_agent'
 db_passwd = 'Ie!5Og@rHPAe'
 db_authsource = 'admin'
@@ -143,6 +144,7 @@ def rest_get_posts(db = 'luxurai_backend'):
         return time.strptime(record[0]['time'], '%Y年%m月%d日 %A%p%I:%M')
     except:
         print('unexpected error:', sys.exc_info())
+        return None
 
 def get_posts(db = 'luxurai_backend'):
     try:
