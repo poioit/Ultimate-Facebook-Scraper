@@ -34,6 +34,8 @@ import time
 
 TELEGRAM_API_ROOT = 'https://api.telegram.org/'
 apiURL = ''
+debug_mode = 0
+debug_post_id = 'groups/319005998759230/permalink/506815109978317/'
 
 def get_facebook_images_url(img_links):
     urls = []
@@ -390,17 +392,27 @@ def extract_and_write_group_posts(elements, filename):
         '''
         total = len(ids)
         i = 0
+        j = 0
         # locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
         # latest is not precise, stop use it
         # latest_time = storage.get_posts('luxurai_backend')
         # print(latest_time)
-        for post_id in ids:
-            #post_id = 'groups/raymond30/permalink/369709753999151/'
-            i += 1
+        if debug_mode == 1:
+            for post_id in ids:
+                print( str(j) + ':' + post_id)
+                j += 1
             try:
-                add_group_post_to_file(f, filename, post_id, i, total, None, reload=True)
+                add_group_post_to_file(f, filename, debug_post_id, i, total, None, reload=True)
             except ValueError:
                 pass
+        else:
+            for post_id in ids:
+                #post_id = 'groups/raymond30/permalink/369709753999151/'
+                i += 1
+                try:
+                    add_group_post_to_file(f, filename, post_id, i, total, None, reload=True)
+                except ValueError:
+                    pass
         f.close()
     except ValueError:
         frame = inspect.currentframe()
@@ -1035,7 +1047,8 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         category = ''
         title = ''
         try:
-            category = data.find_element_by_xpath("//*[@class='bi6gxh9e aov4n071']").text
+            
+            category = data.find_elements_by_xpath(selectors.get("category"))[1].text
         except exceptions.StaleElementReferenceException:
             print('get category StaleElementReferenceException')
             driver.get(utils.create_post_link(post_id, selectors))
@@ -1129,7 +1142,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         print('get comments')
         comments = get_comments()
         download_photos = image_downloader(photos, photos_dir)
-
+        print('download photos done')
         # Update comments and likes
         commentIdx = len(indbComments)
         for i in range(commentIdx, len(comments)-1, 1):
@@ -1143,8 +1156,14 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         locale.setlocale(locale.LC_ALL, 'zh_TW.utf-8')
         material['post_id'] = post_id
         material['time'] = ctime
+
+        print(' get postiostime')
         db_post = storage.get_fbpost(post_id)
-        postisotime = re.sub('星期.', '', ctime)
+        postisotime = ''
+        if ctime == '':
+            print('get ctime error')
+        else:
+            postisotime = re.sub('星期.', '', ctime)
         print(postisotime)
         if (db_post is None or 'postiostime' not in db_post) and postisotime != '':
             try:
@@ -1152,7 +1171,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
             except:
                 postisotime = datetime.strptime(postisotime, "%m月%d日")
             postisotime = timezone('Asia/Taipei').localize(postisotime)
-        elif 'postiostime' in db_post:
+        elif db_post is not None and 'postiostime' in db_post:
             postisotime = db_post.postisotime
         else:
             postisotime = ctime
