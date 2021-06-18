@@ -125,7 +125,8 @@ def update_post(posts):
                         'updatedAt': timenow,
                         'comments': posts['comments'],
                         'interactions': posts['interactions'],
-                        'postisotime': posts['postisotime']
+                        'postisotime': posts['postisotime'],
+                        'message': posts['message']
                     }}
                 )
         except:
@@ -226,6 +227,27 @@ def get_fbpost(post_id, db = 'luxurai_backend'):
         with client:
             db = client['luxurai_backend']
             post = db['helpbuys'].find_one({'post_id': post_id})            
+        
+    except:
+        print('unexpected error:', sys.exc_info())
+
+    return post
+
+def get_helpbuypost(group_id, db = 'luxurai_backend'):
+
+    post = set()
+    try:
+        client = MongoClient(current_dbaddr,
+        username=db_username,
+        password=db_passwd,
+        authSource=db_authsource,
+        authMechanism=db_authMechanism)      
+        with client:
+            db = client['luxurai_backend']
+            for document in db['helpbuys'].find({'message':{'$eq':[]}}, {'post_id':1}) :
+                print (document)
+                post.add(document['post_id'])
+                    
         
     except:
         print('unexpected error:', sys.exc_info())

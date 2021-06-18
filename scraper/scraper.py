@@ -16,6 +16,7 @@ from datetime import datetime
 import re
 ##for timezone
 from pytz import timezone
+from retry import retry
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -36,6 +37,8 @@ TELEGRAM_API_ROOT = 'https://api.telegram.org/'
 apiURL = ''
 debug_mode = 0
 debug_post_id = 'groups/319005998759230/permalink/506815109978317/'
+query_db = 1
+retry_list = []
 
 def get_facebook_images_url(img_links):
     urls = []
@@ -335,64 +338,71 @@ def extract_and_write_group_posts(elements, filename):
         f = create_post_file(filename)
         ids = set()
         cnt = 0
-        driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + Keys.HOME)
-        for x in elements:
-            try:
-                # id
-                print(cnt)
-                cnt = cnt+1
-                
+        #query from database
+        if query_db ==  1:
+            ids = storage.get_helpbuypost('')
+            pass
+        else:
+            #query from web pages
+            driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + Keys.HOME)
+            for x in elements:
                 try:
-                    driver.execute_script("return arguments[0].scrollIntoView(true);", x)
-                    sleep(0.1)
-                    driver.execute_script("scrollBy(0,-1200);")
-                    sleep(0.1)
+                    # id
+                    print(cnt)
+                    cnt = cnt+1
+                    
+                    try:
+                        driver.execute_script("return arguments[0].scrollIntoView(true);", x)
+                        sleep(0.1)
+                        driver.execute_script("scrollBy(0,-1200);")
+                        sleep(0.1)
+                    except Exception:
+                        pass
+                    
+                    hov = ActionChains(driver)
+                    hov.move_to_element(x).perform()
+                    sleep(0.05)
+                    
+                    #pyautogui.typewrite(['down','down','down','down','enter'])
+                    #hov.move_to_element(x).click().perform()
+                    #driver.back()
+                    #hov.contextClick(x)
+                    #hov.perform()
+                    #post_id = x.get_attribute("role")
+                    els = driver.find_elements_by_xpath(selectors.get("group_id"))
+                    for y in els:
+                        try:
+                            
+                            post_id = y.get_attribute("href")
+                            #print(post_id)
+                            regex = re.compile('\w+\/(groups\/\w+\/permalink\/\d+\/).')
+                            
+                            post_id = regex.findall(post_id)
+                            if len(post_id):
+                                ids.add(post_id[0])
+                        except Exception as e:
+                            print("clicke error" . str(e))
+                            pass
+                    #post_href = x.get_attribute("href")
+                    #print(post_href)
+                    #attrs = driver.execute_script('var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;', x)
+                    #print(attrs)
+                except Exception as e:
+                    print(e)
+                    pass
+            '''
+            eles = driver.find_elements_by_xpath(selectors.get("group_id"))
+            for x in eles:
+                try:
+                    post_id = utils.get_group_post_id(x)
+                    ids.append(post_id)
                 except Exception:
                     pass
-                
-                hov = ActionChains(driver)
-                hov.move_to_element(x).perform()
-                sleep(0.05)
-                
-                #pyautogui.typewrite(['down','down','down','down','enter'])
-                #hov.move_to_element(x).click().perform()
-                #driver.back()
-                #hov.contextClick(x)
-                #hov.perform()
-                #post_id = x.get_attribute("role")
-                els = driver.find_elements_by_xpath(selectors.get("group_id"))
-                for y in els:
-                    try:
-                        
-                        post_id = y.get_attribute("href")
-                        #print(post_id)
-                        regex = re.compile('\w+\/(groups\/\w+\/permalink\/\d+\/).')
-                        
-                        post_id = regex.findall(post_id)
-                        if len(post_id):
-                            ids.add(post_id[0])
-                    except Exception as e:
-                        print("clicke error" . str(e))
-                        pass
-                #post_href = x.get_attribute("href")
-                #print(post_href)
-                #attrs = driver.execute_script('var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;', x)
-                #print(attrs)
-            except Exception as e:
-                print(e)
-                pass
-        '''
-        eles = driver.find_elements_by_xpath(selectors.get("group_id"))
-        for x in eles:
-            try:
-                post_id = utils.get_group_post_id(x)
-                ids.append(post_id)
-            except Exception:
-                pass
-        '''
+            '''
         total = len(ids)
         i = 0
         j = 0
+        retry_cnt = 0
         # locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
         # latest is not precise, stop use it
         # latest_time = storage.get_posts('luxurai_backend')
@@ -402,7 +412,7 @@ def extract_and_write_group_posts(elements, filename):
                 print( str(j) + ':' + post_id)
                 j += 1
             try:
-                add_group_post_to_file(f, filename, debug_post_id, i, total, None, reload=True)
+                add_group_post_to_file(f, filename, debug_post_id, j, total, None, reload=True)
             except ValueError:
                 pass
         else:
@@ -413,6 +423,13 @@ def extract_and_write_group_posts(elements, filename):
                     add_group_post_to_file(f, filename, post_id, i, total, None, reload=True)
                 except ValueError:
                     pass
+        print('doing retry list:')
+        for post_id in retry_list:
+            try:
+                retry_cnt += 1
+                add_group_post_to_file(f, filename, post_id, retry_cnt, len(retry_list), None, reload=True)
+            except ValueError:
+                pass
         f.close()
     except ValueError:
         frame = inspect.currentframe()
@@ -446,6 +463,7 @@ def extract_and_write_fan_posts(elements, filename):
         locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
         latest_time = storage.rest_get_posts('luxurai_backend')
         print(latest_time)
+        
         for post_href in ids:
             i += 1
             try:
@@ -986,6 +1004,24 @@ def get_comments():
     return comments
 
 
+@retry(delay=1,tries=4,backoff=2)
+def getfulltime(driver, selector, celement):
+    #hovertime(driver, celement)
+    fulltime = driver.find_element_by_xpath(selector).text
+    if fulltime == '':
+        print('raise getfulltime')
+        raise
+    return fulltime
+
+@retry(delay=1,tries=4,backoff=2)
+def hovertime(driver, celement):
+    try:
+        hov = ActionChains(driver)
+        hov.move_to_element(celement).perform()
+    except Exception:
+        print('raise hovertime')
+        raise
+
 def get_group_post_as_line(post_id, photos_dir, latest_time=None):
     try:
 
@@ -1007,19 +1043,28 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         try:
             for celement in ctimes:
                 simpletime = celement.text
-                
-                regex = re.compile("\d+年\d+月\d+日\w+")
+                print(simpletime)
+                regex = re.compile("\d+年\d+月\d+日\w*")
                 arr_time = regex.findall(simpletime)
+                print(arr_time)
                 if len(arr_time) == 0:
                     simpletime = datetime.now().strftime('%m月%d日')
-                hov = ActionChains(driver)
-                hov.move_to_element(celement).perform()
-                sleep(0.5)
-                fulltime = driver.find_element_by_xpath(selectors.get("ctime")).text
-                
+                try:
+                    try:
+                        hov = ActionChains(driver)
+                        hov.move_to_element(celement).perform()
+                    except Exception:
+                        print('raise hovertime')
+                    sleep(0.8)
+                    #fulltime = driver.find_element_by_xpath().text
+                    fulltime = getfulltime( driver, selectors.get("ctime"), celement)
+                except Exception:
+                    pass
                 
                 if(fulltime):
                     ctime = fulltime
+                elif len(arr_time) != 0:
+                    ctime = arr_time[0]
                 print("ctime:" + ctime)
                 print("full time:" + fulltime)
                 break
@@ -1162,6 +1207,8 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         postisotime = ''
         if ctime == '':
             print('get ctime error')
+            retry_list.append(post_id)
+            sleep(10)
         else:
             postisotime = re.sub('星期.', '', ctime)
         print(postisotime)
