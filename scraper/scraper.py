@@ -37,7 +37,7 @@ TELEGRAM_API_ROOT = 'https://api.telegram.org/'
 apiURL = ''
 debug_mode = 0
 debug_post_id = 'groups/319005998759230/permalink/506815109978317/'
-query_db = 1
+query_db = 0
 retry_list = []
 
 def get_facebook_images_url(img_links):
@@ -1183,6 +1183,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
             pass
         print('get message')
         post_message = get_post_message()
+        print(post_message)
         #post_message = data.text
         print('get comments')
         comments = get_comments()
