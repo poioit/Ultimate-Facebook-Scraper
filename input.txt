@@ -1,7 +1,13 @@
 #Lines starting with # and empty lines will be ignore
 #https://www.facebook.com/groups/system.software2020
-https://www.facebook.com/groups/319005998759230;helpbuys
+#https://www.facebook.com/groups/259862925318342/members;helpbuys
+#https://www.facebook.com/groups/319005998759230;helpbuys
+#Jackfir
+#https://www.facebook.com/groups/1647349805575413;helpbuys
+https://www.facebook.com/groups/1647349805575413/members;helpbuys
 #https://www.facebook.com/groups/269414800695314/members;helpbuys
-#https://www.facebook.com/groups/raymond30;helpbuys
+#https://www.facebook.com/groups/raymond30/members;helpbuys
 #https://www.facebook.com/groups/554988961178275/members;helpbuys
-#https://www.facebook.com/groups/554988961178275;helpbuys
+#https://www.facebook.com/groups/554988961178275;helpbuysinMemoryJwt
+#北美
+#https://www.facebook.com/groups/795724047209616;helpbuys

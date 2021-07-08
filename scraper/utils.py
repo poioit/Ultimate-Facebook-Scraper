@@ -274,7 +274,7 @@ def identify_url(url):
     4 - Group member
     """
     if "groups" in url:
-        if "permalink" in url:
+        if "posts" in url:
             return 3
         elif "members" in url:
             return 4

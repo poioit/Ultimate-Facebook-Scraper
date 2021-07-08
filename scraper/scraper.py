@@ -36,7 +36,7 @@ import time
 TELEGRAM_API_ROOT = 'https://api.telegram.org/'
 apiURL = ''
 debug_mode = 0
-debug_post_id = 'groups/319005998759230/permalink/506815109978317/'
+debug_post_id = 'groups/319005998759230/posts/506815109978317/'
 query_db = 0
 retry_list = []
 
@@ -375,7 +375,7 @@ def extract_and_write_group_posts(elements, filename):
                             
                             post_id = y.get_attribute("href")
                             #print(post_id)
-                            regex = re.compile('\w+\/(groups\/\w+\/permalink\/\d+\/).')
+                            regex = re.compile('\w+\/(groups\/\w+\/posts\/\d+\/).')
                             
                             post_id = regex.findall(post_id)
                             if len(post_id):
@@ -417,7 +417,7 @@ def extract_and_write_group_posts(elements, filename):
                 pass
         else:
             for post_id in ids:
-                #post_id = 'groups/raymond30/permalink/369709753999151/'
+                #post_id = 'groups/raymond30/posts/369709753999151/'
                 i += 1
                 try:
                     add_group_post_to_file(f, filename, post_id, i, total, None, reload=True)
@@ -1005,11 +1005,14 @@ def get_comments():
 
 
 @retry(delay=1,tries=4,backoff=2)
-def getfulltime(driver, selector, celement):
+def getfulltime(hov, driver, selector, celement, notification):
     #hovertime(driver, celement)
     fulltime = driver.find_element_by_xpath(selector).text
     if fulltime == '':
         print('raise getfulltime')
+        notification = driver.find_element_by_xpath(notification)
+        hov.move_to_element(notification).click().perform()
+        hovertime(driver, celement)
         raise
     return fulltime
 
@@ -1018,6 +1021,7 @@ def hovertime(driver, celement):
     try:
         hov = ActionChains(driver)
         hov.move_to_element(celement).perform()
+        sleep(0.8)
     except Exception:
         print('raise hovertime')
         raise
@@ -1057,7 +1061,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
                         print('raise hovertime')
                     sleep(0.8)
                     #fulltime = driver.find_element_by_xpath().text
-                    fulltime = getfulltime( driver, selectors.get("ctime"), celement)
+                    fulltime = getfulltime( hov, driver, selectors.get("ctime"), celement, selectors.get("notification"))
                 except Exception:
                     pass
                 
@@ -1215,9 +1219,13 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         print(postisotime)
         if (db_post is None or 'postiostime' not in db_post) and postisotime != '':
             try:
+                locale.setlocale(locale.LC_ALL, 'zh_TW.utf-8')
                 postisotime = datetime.strptime(postisotime, "%Y年%m月%d日 %p%I:%M")
             except:
-                postisotime = datetime.strptime(postisotime, "%m月%d日")
+                try:
+                    postisotime = datetime.strptime(postisotime, "%Y年%m月%d日")
+                except:
+                    postisotime = datetime.strptime(postisotime, "%m月%d日")
             postisotime = timezone('Asia/Taipei').localize(postisotime)
         elif db_post is not None and 'postiostime' in db_post:
             postisotime = db_post.postisotime

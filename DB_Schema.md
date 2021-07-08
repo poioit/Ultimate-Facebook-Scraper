@@ -7,7 +7,7 @@
     "_id": {
         "$oid": "5f802565e6f317a47a389cc7"
     },
-    "post_id": "groups/554988961178275/permalink/4852854541391674/",
+    "post_id": "groups/554988961178275/posts/4852854541391674/",
     "time": "",
     "title": "Mia Chen",
     "link": "",

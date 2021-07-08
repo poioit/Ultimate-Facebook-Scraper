@@ -14,7 +14,7 @@ class Test(TestCase):
         )
         self.assertEqual(
             utils.identify_url(
-                "https://www.facebook.com/groups/12345645546/permalink/213453415513/"
+                "https://www.facebook.com/groups/12345645546/post/213453415513/"
             ),
             3,
         )

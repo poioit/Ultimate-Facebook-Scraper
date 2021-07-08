@@ -9,7 +9,7 @@ from bson.objectid import ObjectId
 import sys
 
 local_dbaddr = 'localhost'
-remote_dbaddr = '13.230.176.68'
+remote_dbaddr = '3.113.21.2'
 db_username = 'db_agent'
 db_passwd = 'Ie!5Og@rHPAe'
 db_authsource = 'admin'
