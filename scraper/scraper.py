@@ -14,7 +14,7 @@ from sys import platform as _platform
 from time import sleep
 from datetime import datetime
 import re
-##for timezone
+# for timezone
 from pytz import timezone
 from retry import retry
 
@@ -29,16 +29,18 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 from selenium.common import exceptions
 #import pyautogui
-import storage 
+import storage
 import requests
 import time
+import upload_s3 as s3
 
 TELEGRAM_API_ROOT = 'https://api.telegram.org/'
 apiURL = ''
-debug_mode = 0
+debug_mode = 1
 debug_post_id = 'groups/319005998759230/posts/506815109978317/'
 query_db = 0
 retry_list = []
+
 
 def get_facebook_images_url(img_links):
     urls = []
@@ -171,6 +173,7 @@ def extract_and_write_posts(elements, filename):
         print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     return
 
+
 def extract_and_write_posts_onfan(elements, filename):
     try:
         f = open(filename, "w", newline="\r\n", encoding="utf-8")
@@ -187,7 +190,7 @@ def extract_and_write_posts_onfan(elements, filename):
                 post_id = utils.get_post_id(x)
                 print(post_id)
                 ids.append(post_id)
-                
+
                 # locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
                 # latest_time = storage.rest_get_posts('luxurai_backend')
                 # time
@@ -225,6 +228,7 @@ def extract_and_write_posts_onfan(elements, filename):
         print("Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     return
 
+
 def get_fan_status_and_title(link, x):
     # title
     title = utils.get_title(x, selectors)
@@ -233,23 +237,27 @@ def get_fan_status_and_title(link, x):
         title = utils.get_title(x, selectors)
     status = utils.get_status(x, selectors)
     try:
-        #time.sleep(20)
-        result = driver.find_element_by_xpath(selectors.get("title_text_fan")).text
+        # time.sleep(20)
+        result = driver.find_element_by_xpath(
+            selectors.get("title_text_fan")).text
         print(result)
         if title.text == result or result.index(title.text):
             if status == "":
                 temp = utils.get_div_links(x, "img", selectors)
                 if temp == "":  # no image tag which means . it is not a life event
-                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+                    link = utils.get_div_links(
+                        x, "a", selectors).get_attribute("href")
                     post_type = "status update without text"
                 else:
                     post_type = "life event"
-                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+                    link = utils.get_div_links(
+                        x, "a", selectors).get_attribute("href")
                     status = utils.get_div_links(x, "a", selectors).text
             else:
                 post_type = "status update"
                 if utils.get_div_links(x, "a", selectors) != "":
-                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+                    link = utils.get_div_links(
+                        x, "a", selectors).get_attribute("href")
 
         elif title.text.find(" shared ") != -1:
             x1, link = utils.get_title_links(title)
@@ -274,12 +282,11 @@ def get_fan_status_and_title(link, x):
             title = title.text
         status = status.replace("\n", " ")
         title = title.replace("\n", " ")
-    except NoSuchElementException:  #spelling error making this code not work as expected
+    except NoSuchElementException:  # spelling error making this code not work as expected
         pass
     except Exception:
         print("Exception (get_fan_status_and_title)", "Status =", sys.exc_info())
     return link, status, title, post_type
-
 
 
 def get_status_and_title(link, x):
@@ -294,16 +301,19 @@ def get_status_and_title(link, x):
             if status == "":
                 temp = utils.get_div_links(x, "img", selectors)
                 if temp == "":  # no image tag which means . it is not a life event
-                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+                    link = utils.get_div_links(
+                        x, "a", selectors).get_attribute("href")
                     post_type = "status update without text"
                 else:
                     post_type = "life event"
-                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+                    link = utils.get_div_links(
+                        x, "a", selectors).get_attribute("href")
                     status = utils.get_div_links(x, "a", selectors).text
             else:
                 post_type = "status update"
                 if utils.get_div_links(x, "a", selectors) != "":
-                    link = utils.get_div_links(x, "a", selectors).get_attribute("href")
+                    link = utils.get_div_links(
+                        x, "a", selectors).get_attribute("href")
 
         elif title.text.find(" shared ") != -1:
             x1, link = utils.get_title_links(title)
@@ -338,45 +348,49 @@ def extract_and_write_group_posts(elements, filename):
         f = create_post_file(filename)
         ids = set()
         cnt = 0
-        #query from database
-        if query_db ==  1:
+        # query from database
+        if query_db == 1:
             ids = storage.get_helpbuypost('')
             pass
         else:
-            #query from web pages
-            driver.find_element_by_tag_name('body').send_keys(Keys.CONTROL + Keys.HOME)
+            # query from web pages
+            driver.find_element_by_tag_name(
+                'body').send_keys(Keys.CONTROL + Keys.HOME)
             for x in elements:
                 try:
                     # id
                     print(cnt)
                     cnt = cnt+1
-                    
+
                     try:
-                        driver.execute_script("return arguments[0].scrollIntoView(true);", x)
+                        driver.execute_script(
+                            "return arguments[0].scrollIntoView(true);", x)
                         sleep(0.1)
                         driver.execute_script("scrollBy(0,-1200);")
                         sleep(0.1)
                     except Exception:
                         pass
-                    
+
                     hov = ActionChains(driver)
                     hov.move_to_element(x).perform()
                     sleep(0.05)
-                    
-                    #pyautogui.typewrite(['down','down','down','down','enter'])
-                    #hov.move_to_element(x).click().perform()
-                    #driver.back()
-                    #hov.contextClick(x)
-                    #hov.perform()
+
+                    # pyautogui.typewrite(['down','down','down','down','enter'])
+                    # hov.move_to_element(x).click().perform()
+                    # driver.back()
+                    # hov.contextClick(x)
+                    # hov.perform()
                     #post_id = x.get_attribute("role")
-                    els = driver.find_elements_by_xpath(selectors.get("group_id"))
+                    els = driver.find_elements_by_xpath(
+                        selectors.get("group_id"))
                     for y in els:
                         try:
-                            
+
                             post_id = y.get_attribute("href")
-                            #print(post_id)
-                            regex = re.compile('\w+\/(groups\/\w+\/posts\/\d+\/).')
-                            
+                            # print(post_id)
+                            regex = re.compile(
+                                '\w+\/(groups\/\w+\/posts\/\d+\/).')
+
                             post_id = regex.findall(post_id)
                             if len(post_id):
                                 ids.add(post_id[0])
@@ -384,9 +398,9 @@ def extract_and_write_group_posts(elements, filename):
                             print("clicke error" . str(e))
                             pass
                     #post_href = x.get_attribute("href")
-                    #print(post_href)
+                    # print(post_href)
                     #attrs = driver.execute_script('var items = {}; for (index = 0; index < arguments[0].attributes.length; ++index) { items[arguments[0].attributes[index].name] = arguments[0].attributes[index].value }; return items;', x)
-                    #print(attrs)
+                    # print(attrs)
                 except Exception as e:
                     print(e)
                     pass
@@ -409,10 +423,11 @@ def extract_and_write_group_posts(elements, filename):
         # print(latest_time)
         if debug_mode == 1:
             for post_id in ids:
-                print( str(j) + ':' + post_id)
+                print(str(j) + ':' + post_id)
                 j += 1
             try:
-                add_group_post_to_file(f, filename, debug_post_id, j, total, None, reload=True)
+                add_group_post_to_file(
+                    f, filename, debug_post_id, j, total, None, reload=True)
             except ValueError:
                 pass
         else:
@@ -420,32 +435,37 @@ def extract_and_write_group_posts(elements, filename):
                 #post_id = 'groups/raymond30/posts/369709753999151/'
                 i += 1
                 try:
-                    add_group_post_to_file(f, filename, post_id, i, total, None, reload=True)
+                    add_group_post_to_file(
+                        f, filename, post_id, i, total, None, reload=True)
                 except ValueError:
                     pass
         print('doing retry list:')
         for post_id in retry_list:
             try:
                 retry_cnt += 1
-                add_group_post_to_file(f, filename, post_id, retry_cnt, len(retry_list), None, reload=True)
+                add_group_post_to_file(f, filename, post_id, retry_cnt, len(
+                    retry_list), None, reload=True)
             except ValueError:
                 pass
         f.close()
     except ValueError:
         frame = inspect.currentframe()
         # __FILE__
-        fileName  =  frame.f_code.co_filename
+        fileName = frame.f_code.co_filename
         # __LINE__
         fileNo = frame.f_lineno
-        print(fileName + str(fileNo) + "Exception (extract_and_write_posts)", "Status =", sys.exc_info())
+        print(fileName + str(fileNo) +
+              "Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     except Exception:
         frame = inspect.currentframe()
         # __FILE__
-        fileName  =  frame.f_code.co_filename
+        fileName = frame.f_code.co_filename
         # __LINE__
         fileNo = frame.f_lineno
-        print(fileName + str(fileNo) + "Exception (extract_and_write_posts)", "Status =", sys.exc_info())
+        print(fileName + str(fileNo) +
+              "Exception (extract_and_write_posts)", "Status =", sys.exc_info())
     return
+
 
 def extract_and_write_fan_posts(elements, filename):
     try:
@@ -463,20 +483,24 @@ def extract_and_write_fan_posts(elements, filename):
         locale.setlocale(locale.LC_ALL, 'zh_CN.utf-8')
         latest_time = storage.rest_get_posts('luxurai_backend')
         print(latest_time)
-        
+
         for post_href in ids:
             i += 1
             try:
-                add_group_post_to_file(f, filename, post_href, i, total, latest_time, reload=False)
+                add_group_post_to_file(
+                    f, filename, post_href, i, total, latest_time, reload=False)
             except ValueError:
                 print('value error')
                 pass
         f.close()
     except ValueError:
-        print("Exception (extract_and_write_fan_posts)", "Status =", sys.exc_info())
+        print("Exception (extract_and_write_fan_posts)",
+              "Status =", sys.exc_info())
     except Exception:
-        print("Exception (extract_and_write_fan_posts)", "Status =", sys.exc_info())
+        print("Exception (extract_and_write_fan_posts)",
+              "Status =", sys.exc_info())
     return
+
 
 def extract_and_write_group_members(elements, filename):
     try:
@@ -488,8 +512,10 @@ def extract_and_write_group_members(elements, filename):
         for y in elements:
             try:
                 #x = y.find_elements_by_xpath("../../../../..//div[@class='q9uorilb l9j0dhe7 pzggbiyp du4w35lb']/*[@class='pzggbiyp']/*")
-                photolink = y.find_elements_by_xpath(selectors.get("group_member_photo"))[0]
-                urllink = y.find_elements_by_xpath(selectors.get("group_member_link"))[0]
+                photolink = y.find_elements_by_xpath(
+                    selectors.get("group_member_photo"))[0]
+                urllink = y.find_elements_by_xpath(
+                    selectors.get("group_member_link"))[0]
                 user_profile = {}
                 user_ref = urllink.get_attribute("href")
                 regex = re.compile('.+\/(\d+)')
@@ -499,17 +525,19 @@ def extract_and_write_group_members(elements, filename):
                 user_profile['name'] = urllink.text
                 user_profile['group_ids'] = [group]
                 user_profile['photo'] = photolink.get_attribute("xlink:href")
-                
+                uploader = s3.S3uploader()
+                backup_photo = uploader.upload(user_profile['photo'], user_id)
+                user_profile['backup_photo'] = backup_photo
                 cur_user = storage.get_fbuser(user_id)
                 if cur_user is not None and group not in cur_user['group_ids']:
                     cur_user['group_ids'].append(group)
                     user_profile = cur_user
                 user_list.append(user_profile)
                 # we still need to update the user photo
-                #elif cur_user is not None:
+                # elif cur_user is not None:
                 #    continue
-                #remove here to update in the following process
-                #if not cur_user:
+                # remove here to update in the following process
+                # if not cur_user:
                 storage.update_user(user_profile)
             except Exception:
                 pass
@@ -520,32 +548,36 @@ def extract_and_write_group_members(elements, filename):
         for i, _ in enumerate(profile_page):
             try:
                 cur_user = storage.get_fbuser(user_list[i]['user_id'])
-                if (cur_user is not None) and ( not 'join_groups' in cur_user or ('join_groups' in cur_user and not utils.contains(cur_user['join_groups'],lambda x: x['group_id'] == group))):
+                if (cur_user is not None) and (not 'join_groups' in cur_user or ('join_groups' in cur_user and not utils.contains(cur_user['join_groups'], lambda x: x['group_id'] == group))):
                     print(i)
                     driver.get(profile_page[i])
                     driver.implicitly_wait(60)
                     sleep(5)
                     user_added_date = driver.find_elements_by_xpath(
-                                selectors.get("user_added_date")
-                            )
+                        selectors.get("user_added_date")
+                    )
                     for j, _ in enumerate(user_added_date):
-                        if( hasattr(user_added_date[j],'text')):
-                            #print(user_added_date[j].text)
+                        if(hasattr(user_added_date[j], 'text')):
+                            # print(user_added_date[j].text)
                             regex = re.compile('(\d+年.+月.+日).+')
                             added_date = regex.findall(user_added_date[j].text)
                             if len(added_date):
                                 print(added_date[0])
-                                join_date = datetime.strptime(added_date[0], "%Y年%m月%d日")
-                                join_date = timezone('Asia/Taipei').localize(join_date)
-                                if not hasattr(user_list[i],'join_groups'):
+                                join_date = datetime.strptime(
+                                    added_date[0], "%Y年%m月%d日")
+                                join_date = timezone(
+                                    'Asia/Taipei').localize(join_date)
+                                if not hasattr(user_list[i], 'join_groups'):
                                     user_list[i]['join_groups'] = []
                                 else:
                                     user_list[i]['join_groups'] = cur_user['join_groups']
-                                user_list[i]['join_groups'].append({'group_id':group, 'join_date':join_date})
-                                
+                                user_list[i]['join_groups'].append(
+                                    {'group_id': group, 'join_date': join_date})
+
                                 storage.update_user(user_list[i])
                                 break
-                    driver.get('https://www.facebook.com/groups/' + group + '/members/')
+                    driver.get('https://www.facebook.com/groups/' +
+                               group + '/members/')
                 driver.implicitly_wait(60)
                 sleep(5)
             except Exception:
@@ -559,7 +591,8 @@ def extract_and_write_group_members(elements, filename):
 
 
 def add_group_post_to_file(f, filename, post_id, number=1, total=1, latest_time=None, reload=False):
-    print("Scraping Post(" + post_id + "). " + str(number) + " of " + str(total))
+    print("Scraping Post(" + post_id + "). " +
+          str(number) + " of " + str(total))
     photos_dir = os.path.dirname(filename)
     if reload:
         driver.get(utils.create_post_link(post_id, selectors))
@@ -603,7 +636,7 @@ def save_to_file(name, elements, status, current_section):
     try:
         f = None  # file pointer
 
-        if status != 4 and status != 5 and status !=6:
+        if status != 4 and status != 5 and status != 6:
             f = open(name, "w", encoding="utf-8", newline="\r\n")
 
         results = []
@@ -626,7 +659,8 @@ def save_to_file(name, elements, status, current_section):
                 if download_friends_photos:
                     if friends_small_size:
                         img_links = [
-                            x.find_element_by_css_selector("img").get_attribute("src")
+                            x.find_element_by_css_selector(
+                                "img").get_attribute("src")
                             for x in elements
                         ]
                     else:
@@ -761,9 +795,6 @@ def save_to_file(name, elements, status, current_section):
         elif status == 7:
             # get profile links of members
             extract_and_write_group_members(elements, name)
-            
-            
-            
 
         """Write results to file"""
         if status == 0:
@@ -807,7 +838,8 @@ def save_to_file(name, elements, status, current_section):
         f.close()
 
     except Exception:
-        print("Exception (save_to_file)", "Status =", str(status), sys.exc_info())
+        print("Exception (save_to_file)", "Status =",
+              str(status), sys.exc_info())
         pass
 
     return
@@ -842,8 +874,10 @@ def scrape_data(url, scan_list, section, elements_path, save_status, file_names)
                 if sections_bar.text.find(scan_list[i]) == -1:
                     continue
             if save_status == 7:
-                #utils.scroll(total_scrolls, driver, selectors, scroll_time)
-                utils.scroll_to_bottom(driver)
+                if debug_mode == 1:
+                    utils.scroll(total_scrolls, driver, selectors, scroll_time)
+                else:
+                    utils.scroll_to_bottom(driver)
             elif save_status != 3:
                 utils.scroll(total_scrolls, driver, selectors, scroll_time)
                 pass
@@ -931,7 +965,8 @@ def scrap_profile():
         file_names = params[item]["file_names"]
         save_status = params[item]["save_status"]
 
-        scrape_data(user_id, scan_list, section, elements_path, save_status, file_names)
+        scrape_data(user_id, scan_list, section,
+                    elements_path, save_status, file_names)
 
         print("{} Done!".format(item))
 
@@ -940,14 +975,15 @@ def scrap_profile():
 
     return
 
+
 def get_post_message():
     messages = []
     try:
         data = driver.find_elements_by_xpath(selectors.get("post_message"))
-        
+
         for d in data:
             try:
-                #print(d.text)
+                # print(d.text)
                 if d.text != '':
                     messages.append(d.text+'\n')
             except Exception:
@@ -955,6 +991,7 @@ def get_post_message():
     except Exception:
         pass
     return messages
+
 
 def get_comments():
     comments = []
@@ -983,14 +1020,17 @@ def get_comments():
         data = driver.find_elements_by_xpath(selectors.get("comment"))
         for d in data:
             try:
-                author = d.find_element_by_xpath(selectors.get("comment_author")).text
-                profile = d.find_element_by_xpath(selectors.get("comment_author_href")).get_attribute('href')
+                author = d.find_element_by_xpath(
+                    selectors.get("comment_author")).text
+                profile = d.find_element_by_xpath(selectors.get(
+                    "comment_author_href")).get_attribute('href')
                 #profile = profile[0:profile.find('?comment_id')]
                 regex = re.compile('.+\/groups\/\w+\/user\/(\d+)\/.')
                 profile = regex.findall(profile)[0]
                 text = d.text
                 replies = utils.get_replies(d, selectors)
-                comments.append({'author':author, 'text':text, 'profile':profile, 'replies':replies})
+                comments.append({'author': author, 'text': text,
+                                'profile': profile, 'replies': replies})
             except Exception as e:
                 print(e)
                 pass
@@ -1000,11 +1040,11 @@ def get_comments():
     except Exception as e:
         print(e)
         pass
-    
+
     return comments
 
 
-@retry(delay=1,tries=4,backoff=2)
+@retry(delay=1, tries=4, backoff=2)
 def getfulltime(hov, driver, selector, celement, notification):
     #hovertime(driver, celement)
     fulltime = driver.find_element_by_xpath(selector).text
@@ -1016,7 +1056,8 @@ def getfulltime(hov, driver, selector, celement, notification):
         raise
     return fulltime
 
-@retry(delay=1,tries=4,backoff=2)
+
+@retry(delay=1, tries=4, backoff=2)
 def hovertime(driver, celement):
     try:
         hov = ActionChains(driver)
@@ -1025,6 +1066,7 @@ def hovertime(driver, celement):
     except Exception:
         print('raise hovertime')
         raise
+
 
 def get_group_post_as_line(post_id, photos_dir, latest_time=None):
     try:
@@ -1039,7 +1081,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         material = {}
         data = driver.find_element_by_xpath(selectors.get("single_post"))
         print('post_id:'+post_id)
-        #print(data)
+        # print(data)
         print('================================')
         ctimes = driver.find_elements_by_xpath(selectors.get("time"))
         cnt = 0
@@ -1061,10 +1103,11 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
                         print('raise hovertime')
                     sleep(0.8)
                     #fulltime = driver.find_element_by_xpath().text
-                    fulltime = getfulltime( hov, driver, selectors.get("ctime"), celement, selectors.get("notification"))
+                    fulltime = getfulltime(hov, driver, selectors.get(
+                        "ctime"), celement, selectors.get("notification"))
                 except Exception:
                     pass
-                
+
                 if(fulltime):
                     ctime = fulltime
                 elif len(arr_time) != 0:
@@ -1088,16 +1131,17 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
             print('get ctime error')
             ctime = simpletime
             pass
-        
+
         #ctime = utils.get_time(data, selectors)
-        
-        #if latest_time != None and latest_time >= time.strptime(ctime, '%Y年%m月%d日 %A%p%I:%M'):
+
+        # if latest_time != None and latest_time >= time.strptime(ctime, '%Y年%m月%d日 %A%p%I:%M'):
         #    return ''
         category = ''
         title = ''
         try:
-            
-            category = data.find_elements_by_xpath(selectors.get("category"))[1].text
+
+            category = data.find_elements_by_xpath(
+                selectors.get("category"))[1].text
         except exceptions.StaleElementReferenceException:
             print('get category StaleElementReferenceException')
             driver.get(utils.create_post_link(post_id, selectors))
@@ -1115,7 +1159,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         print("title:" + title)
         # link, status, title, type = get_status_and_title(title,data)
         #link = utils.get_div_links(data, "a", selectors)
-        #if link != "":
+        # if link != "":
         #    link = link.get_attribute("href")
         link = ""
         post_type = ""
@@ -1130,24 +1174,26 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
                 hov.move_to_element(status).click().perform()
                 sleep(1)
                 #popupdiv = driver.find_element_by_xpath(selectors.get("status_all_list"))
-                #get the scroll window
-                mooddiv = driver.find_elements_by_xpath(selectors.get("status_mood"))
+                # get the scroll window
+                mooddiv = driver.find_elements_by_xpath(
+                    selectors.get("status_mood"))
                 mooddiv = mooddiv[len(mooddiv)-1]
                 print(count)
                 # FB if there is a notification
                 # this will get the notification window
                 # we need to force to get the last one
-                for i in range(int(count/5+1) ):
+                for i in range(int(count/5+1)):
                     print('scroll:' + str(i))
                     try:
-                        driver.execute_script("arguments[0].scrollIntoView(true);",mooddiv)
+                        driver.execute_script(
+                            "arguments[0].scrollIntoView(true);", mooddiv)
                         sleep(2)
                     except Exception as e:
                         print(e)
-                    
-                
+
                 try:
-                    user_list = driver.find_elements_by_xpath(selectors.get("status_user_list"))
+                    user_list = driver.find_elements_by_xpath(
+                        selectors.get("status_user_list"))
                     #user_list = datas.find_elements_by_xpath(selectors.get("status_user_list"))
                 except Exception as e:
                     print(e)
@@ -1157,31 +1203,34 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
                         if user.text is not '' and '#' not in user.text:
                             print(str(index) + ":" + user.text)
                             index += 1
-                            users.append({'url':user.get_attribute('href'),
-                            'name':user.text})
+                            users.append({'url': user.get_attribute('href'),
+                                          'name': user.text})
             except Exception as e:
                 print(e)
                 pass
             finally:
-                
+
                 print('response close start')
                 try:
-                    divclose = driver.find_element_by_xpath(selectors.get("status_divclose"))
-                    close = divclose.find_element_by_xpath(selectors.get("status_close"))
+                    divclose = driver.find_element_by_xpath(
+                        selectors.get("status_divclose"))
+                    close = divclose.find_element_by_xpath(
+                        selectors.get("status_close"))
                     hov.move_to_element(close).click().perform()
                     sleep(0.1)
                 except Exception as e:
                     print(e)
                     pass
                 print('reponse close end')
-                #print(status_list.get_attribute('innerHTML'))
+                # print(status_list.get_attribute('innerHTML'))
         except Exception:
             print('get status error:' + sys.exc_info())
             pass
-        
+
         print('get photo')
         try:
-            photos = utils.get_post_photos_links(data, selectors, photos_small_size)
+            photos = utils.get_post_photos_links(
+                data, selectors, photos_small_size)
         except Exception:
             print('get photo error:' + sys.exc_info())
             pass
@@ -1220,7 +1269,8 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         if (db_post is None or 'postiostime' not in db_post) and postisotime != '':
             try:
                 locale.setlocale(locale.LC_ALL, 'zh_TW.utf-8')
-                postisotime = datetime.strptime(postisotime, "%Y年%m月%d日 %p%I:%M")
+                postisotime = datetime.strptime(
+                    postisotime, "%Y年%m月%d日 %p%I:%M")
             except:
                 try:
                     postisotime = datetime.strptime(postisotime, "%Y年%m月%d日")
@@ -1240,7 +1290,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         material['download_photos'] = download_photos
         material['category'] = category
         material['interactions'] = indbLikes
-        #storage.insert_posts(material)
+        # storage.insert_posts(material)
 
         print('=======material =========')
         print(material)
@@ -1271,7 +1321,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
     except Exception:
         frame = inspect.currentframe()
         # __FILE__
-        fileName  =  frame.f_code.co_filename
+        fileName = frame.f_code.co_filename
         # __LINE__
         fileNo = frame.f_lineno
         print(fileName + str(fileNo) + 'unexpected error:', sys.exc_info())
@@ -1341,7 +1391,8 @@ def scrape_group(url):
         file_names = params[item]["file_names"]
         save_status = params[item]["save_status"]
 
-        scrape_data(url, scan_list, section, elements_path, save_status, file_names)
+        scrape_data(url, scan_list, section,
+                    elements_path, save_status, file_names)
 
         print("{} Done!".format(item))
 
@@ -1349,6 +1400,7 @@ def scrape_group(url):
     os.chdir("../..")
 
     return
+
 
 def scrape_groupmembers(url):
     if create_folders() is None:
@@ -1374,7 +1426,8 @@ def scrape_groupmembers(url):
         file_names = params[item]["file_names"]
         save_status = params[item]["save_status"]
 
-        scrape_data(url, scan_list, section, elements_path, save_status, file_names)
+        scrape_data(url, scan_list, section,
+                    elements_path, save_status, file_names)
 
         print("{} Done!".format(item))
 
@@ -1402,7 +1455,7 @@ def login(email, password):
         options.add_argument("--disable-notifications")
         options.add_argument("--disable-infobars")
         options.add_argument("--mute-audio")
-        #options.add_argument("--headless")
+        # options.add_argument("--headless")
 
         try:
             driver = webdriver.Chrome(
@@ -1429,7 +1482,8 @@ def login(email, password):
             driver.find_element_by_name("login").click()
 
         # if your account uses multi factor authentication
-        mfa_code_input = utils.safe_find_element_by_id(driver, "approvals_code")
+        mfa_code_input = utils.safe_find_element_by_id(
+            driver, "approvals_code")
 
         if mfa_code_input is None:
             return
@@ -1439,9 +1493,11 @@ def login(email, password):
 
         # there are so many screens asking you to verify things. Just skip them all
         while (
-            utils.safe_find_element_by_id(driver, "checkpointSubmitButton") is not None
+            utils.safe_find_element_by_id(
+                driver, "checkpointSubmitButton") is not None
         ):
-            dont_save_browser_radio = utils.safe_find_element_by_id(driver, "u_0_3")
+            dont_save_browser_radio = utils.safe_find_element_by_id(
+                driver, "u_0_3")
             if dont_save_browser_radio is not None:
                 dont_save_browser_radio.click()
 
@@ -1468,8 +1524,10 @@ def scraper(**kwargs):
     if ("TELEGRAM_TOKEN" not in cfg) or ("CHAT_ID" not in cfg):
         print("Your TELEGRAM_TOKEN or CHAT_ID is missing. Kindly write them in credentials.yaml")
         exit(1)
-        
-    apiURL = TELEGRAM_API_ROOT + 'bot' + str(cfg['TELEGRAM_TOKEN']) + '/sendMessage?chat_id=' + str(cfg['CHAT_ID']) + '&text=fb_scraper action: \n'
+
+    apiURL = TELEGRAM_API_ROOT + 'bot' + \
+        str(cfg['TELEGRAM_TOKEN']) + '/sendMessage?chat_id=' + \
+        str(cfg['CHAT_ID']) + '&text=fb_scraper action: \n'
     req = apiURL + 'start...'
     requests.get(req)
 
@@ -1481,7 +1539,7 @@ def scraper(**kwargs):
         if not line.lstrip().startswith("#") and not line.strip() == ""
     ]
     dbs = [
-        line.split(';')[1].replace('\n','')
+        line.split(';')[1].replace('\n', '')
         for line in open("input.txt")
         if not line.lstrip().startswith("#") and not line.strip() == ""
     ]
@@ -1518,13 +1576,10 @@ def scraper(**kwargs):
     req = apiURL + 'end.'
     requests.get(req)
 
-    
-
 
 # -------------------------------------------------------------
 # -------------------------------------------------------------
 # -------------------------------------------------------------
-
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     # PLS CHECK IF HELP CAN BE BETTER / LESS AMBIGUOUS
@@ -1587,7 +1642,7 @@ if __name__ == "__main__":
     with open("selectors.json") as a, open("params.json") as b:
         selectors = json.load(a)
         params = json.load(b)
-    
+
     firefox_profile_path = selectors.get("firefox_profile_path")
     facebook_https_prefix = selectors.get("facebook_https_prefix")
     facebook_link_body = selectors.get("facebook_link_body")
