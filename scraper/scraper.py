@@ -40,6 +40,9 @@ debug_mode = 1
 debug_post_id = 'groups/319005998759230/posts/506815109978317/'
 query_db = 0
 retry_list = []
+ACCESS_KEY = ''
+SECRET_KEY = ''
+BUCKET_ID = ''
 
 
 def get_facebook_images_url(img_links):
@@ -509,6 +512,7 @@ def extract_and_write_group_members(elements, filename):
         current_url = driver.current_url
         regex = re.compile('.+\/groups\/(\w+)\/.+')
         group = regex.findall(current_url)[0]
+        uploader = s3.S3uploader(ACCESS_KEY, SECRET_KEY, BUCKET_ID)
         for y in elements:
             try:
                 #x = y.find_elements_by_xpath("../../../../..//div[@class='q9uorilb l9j0dhe7 pzggbiyp du4w35lb']/*[@class='pzggbiyp']/*")
@@ -525,7 +529,7 @@ def extract_and_write_group_members(elements, filename):
                 user_profile['name'] = urllink.text
                 user_profile['group_ids'] = [group]
                 user_profile['photo'] = photolink.get_attribute("xlink:href")
-                uploader = s3.S3uploader()
+
                 backup_photo = uploader.upload(user_profile['photo'], user_id)
                 user_profile['backup_photo'] = backup_photo
                 cur_user = storage.get_fbuser(user_id)
@@ -1524,7 +1528,12 @@ def scraper(**kwargs):
     if ("TELEGRAM_TOKEN" not in cfg) or ("CHAT_ID" not in cfg):
         print("Your TELEGRAM_TOKEN or CHAT_ID is missing. Kindly write them in credentials.yaml")
         exit(1)
-
+    global ACCESS_KEY
+    global SECRET_KEY
+    global BUCKET_ID
+    ACCESS_KEY = str(cfg['ACCESS_KEY'])
+    SECRET_KEY = str(cfg['SECRET_KEY'])
+    BUCKET_ID = str(cfg['BUCKET_ID'])
     apiURL = TELEGRAM_API_ROOT + 'bot' + \
         str(cfg['TELEGRAM_TOKEN']) + '/sendMessage?chat_id=' + \
         str(cfg['CHAT_ID']) + '&text=fb_scraper action: \n'

@@ -6,22 +6,26 @@ from boto.s3.key import Key
 from botocore.exceptions import NoCredentialsError
 import os
 
-ACCESS_KEY = 'AKIAJ4YNRXTDZCDXVHXA'
-SECRET_KEY = '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'
-BUCKET_ID = 'org.handoutdocs.innovtest.store'
+
 S3_IMG_URL = 'https://di93lo4zawi3i.cloudfront.net'
 
 
 class S3uploader:
-    def __init__(self):
+    def __init__(self, access_key, secret_key, buckid_id):
+        self.ACCESS_KEY = access_key
+        self.SECRET_KEY = secret_key
+        self.BUCKET_ID = buckid_id
         pass
 
     def upload(self, url, user_id):
+        if self.ACCESS_KEY == '':
+            print("upload without S3 access key")
+            return
         filename = user_id + '.jpg'
         try:
-            conn = boto3.client('s3', aws_access_key_id=ACCESS_KEY,
-                                aws_secret_access_key=SECRET_KEY)
-            bucket_name = BUCKET_ID
+            conn = boto3.client('s3', aws_access_key_id=self.ACCESS_KEY,
+                                aws_secret_access_key=self.SECRET_KEY)
+            bucket_name = self.BUCKET_ID
             # 'Like' a file object
             file_object = requests.get(url).content
             with open(filename, 'wb') as handler:
