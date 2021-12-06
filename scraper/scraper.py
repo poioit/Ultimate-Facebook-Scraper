@@ -36,7 +36,7 @@ import upload_s3 as s3
 
 TELEGRAM_API_ROOT = 'https://api.telegram.org/'
 apiURL = ''
-debug_mode = 1
+debug_mode = 0
 debug_post_id = 'groups/319005998759230/posts/506815109978317/'
 query_db = 0
 retry_list = []
@@ -1145,7 +1145,7 @@ def get_group_post_as_line(post_id, photos_dir, latest_time=None):
         try:
 
             category = data.find_elements_by_xpath(
-                selectors.get("category"))[1].text
+                selectors.get("category"))[0].text
         except exceptions.StaleElementReferenceException:
             print('get category StaleElementReferenceException')
             driver.get(utils.create_post_link(post_id, selectors))
